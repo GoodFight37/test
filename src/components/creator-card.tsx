@@ -43,6 +43,7 @@ export function CreatorCard({
       aria-label={`${creator.displayName}, rang ${creator.rank}, ${rarity.label}${locked ? ", non obtenue" : ""}`}
     >
       <div className="card-foil" aria-hidden="true" />
+      <div className="card-prism" aria-hidden="true" />
       <div className="card-photo-wrap">
         <Image
           className="card-photo"

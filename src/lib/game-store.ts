@@ -9,6 +9,8 @@
 import type { PackType } from "@/lib/catalog";
 import {
   createInitialState,
+  drawPack,
+  ownedSlugs,
   openPack as engineOpenPack,
   spendHourglass as engineSpendHourglass,
   type DrawnCard,
@@ -125,6 +127,16 @@ export const gameStore = {
     const result = engineOpenPack(current(), packType, now);
     persist(result.state);
     return result.cards;
+  },
+
+  /**
+   * Mode test : même `drawPack()` que la vraie ouverture (mêmes pondérations,
+   * aucun doublon interne, badges NEW calculés sur la vraie collection), mais
+   * **sans persistance** — ni booster consommé, ni carte/XP/points crédités.
+   * Sert à rejouer la cinématique en boucle (voir `src/lib/test-mode.ts`).
+   */
+  previewPack(packType: PackType): DrawnCard[] {
+    return drawPack(packType, ownedSlugs(current()));
   },
 
   useHourglass(packType: PackType, now = Date.now()): void {

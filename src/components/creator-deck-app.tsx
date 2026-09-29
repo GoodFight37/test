@@ -1,9 +1,6 @@
 "use client";
-
 import { useCallback, useMemo, useState } from "react";
-import Image from "next/image";
 import {
-  Archive,
   BookOpen,
   Check,
   ChevronLeft,
@@ -18,38 +15,42 @@ import {
   Hourglass,
   Layers3,
   LoaderCircle,
-  Radio,
   RotateCcw,
   Search,
   ShieldCheck,
   Sparkles,
   Target,
   Trophy,
+  Volume2,
   WifiOff,
   X,
   Zap,
 } from "lucide-react";
+import { Card3D } from "@/components/card3d";
 import { CreatorCard } from "@/components/creator-card";
+import { PackArtwork } from "@/components/pack-artwork";
+import { PackOpening } from "@/components/pack-opening";
 import { useGame, useNow } from "@/hooks/use-game";
+import { useSoundSettings } from "@/hooks/use-sound-settings";
+import { useTestMode } from "@/hooks/use-test-mode";
 import {
   CREATORS,
   CREATOR_BY_SLUG,
   PACKS,
   RARITY_META,
-  creatorImage,
   type CardVariant,
+  type Creator,
   type PackType,
   type Rarity,
 } from "@/lib/catalog";
-import { getGameView, type DrawnCard, type GameView } from "@/lib/game-engine";
+import { getGameView, type GameView } from "@/lib/game-engine";
 import { gameStore } from "@/lib/game-store";
+import { soundSettings } from "@/lib/sound-settings";
+import { testModeStore } from "@/lib/test-mode";
 
 type GameState = GameView;
 type Tab = "home" | "collection" | "missions" | "profile";
 type CollectionFilter = "all" | "owned" | Rarity;
-
-/** Délai avant la révélation : donne un temps « d'ouverture » au booster. */
-const OPENING_DELAY_MS = 650;
 
 const RARITY_COUNTS = CREATORS.reduce<Record<Rarity, number>>(
   (acc, creator) => {
@@ -121,60 +122,23 @@ function TopBar({ game }: { game: GameState }) {
   );
 }
 
-function PackArtwork({ packType }: { packType: PackType }) {
-  const people =
-    packType === "live"
-      ? [CREATORS[0], CREATORS[1], CREATORS[2]]
-      : [CREATORS[5], CREATORS[6], CREATORS[7]];
-  return (
-    <div className={`pack-artwork pack-${packType}`}>
-      <div className="pack-noise" />
-      <div className="pack-orbit one" />
-      <div className="pack-orbit two" />
-      <div className="pack-people">
-        {people.map((creator, index) => (
-          <Image
-            key={creator.slug}
-            src={creatorImage(creator)}
-            alt=""
-            width={92}
-            height={122}
-            quality={88}
-            sizes="92px"
-            style={{ "--person-index": index } as React.CSSProperties}
-          />
-        ))}
-      </div>
-      <div className="pack-brand">
-        <span>CREATOR</span>
-        <strong>DECK</strong>
-      </div>
-      <div className="pack-edition">
-        {packType === "live" ? <Radio size={13} /> : <Archive size={13} />}
-        {packType === "live" ? "TOP 500 LIVE" : "ARCHIVES 500"}
-      </div>
-      <small>{PACKS[packType].size} CARTES</small>
-    </div>
-  );
-}
-
 function HomeView({
   game,
   selectedPack,
-  setSelectedPack,
   onOpen,
   onUseHourglass,
   opening,
   usingHourglass,
+  testMode,
   now,
 }: {
   game: GameState;
   selectedPack: PackType;
-  setSelectedPack: (pack: PackType) => void;
   onOpen: () => void;
   onUseHourglass: () => void;
   opening: boolean;
   usingHourglass: boolean;
+  testMode: boolean;
   now: number;
 }) {
   const pack = PACKS[selectedPack];
@@ -197,24 +161,8 @@ function HomeView({
         </div>
       </section>
 
-      <div className="pack-tabs" role="tablist" aria-label="Choix du booster">
-        {(["live", "archive"] as PackType[]).map((type) => {
-          const amount = type === "live" ? game.player.livePacks : game.player.archivePacks;
-          return (
-            <button
-              key={type}
-              className={selectedPack === type ? "active" : ""}
-              onClick={() => setSelectedPack(type)}
-              role="tab"
-              aria-selected={selectedPack === type}
-            >
-              {type === "live" ? <Radio size={15} /> : <Archive size={15} />}
-              <span>{PACKS[type].label}</span>
-              <b>{amount}</b>
-            </button>
-          );
-        })}
-      </div>
+      {/* Onglets de choix de booster retirés : un seul booster pour
+          l'instant (le second concept reviendra plus tard). */}
 
       <section className={`pack-stage stage-${selectedPack}`}>
         <div className="stage-glow" />
@@ -228,11 +176,25 @@ function HomeView({
       </section>
 
       <section className="open-panel">
+        {testMode ? (
+          <p className="testmode-banner" role="status">
+            <Zap size={13} />
+            Mode test : ouvertures illimitées, ta collection n&apos;est pas modifiée
+          </p>
+        ) : null}
         <div className="stock-row">
           <div>
             <span>Disponibles</span>
             <strong>
-              {stock}<small>/{pack.max}</small>
+              {testMode ? (
+                <>
+                  ∞<small> illimité</small>
+                </>
+              ) : (
+                <>
+                  {stock}<small>/{pack.max}</small>
+                </>
+              )}
             </strong>
           </div>
           <div className="timer-copy">
@@ -243,16 +205,21 @@ function HomeView({
         <button
           className="primary-action"
           onClick={onOpen}
-          disabled={stock <= 0 || opening}
+          disabled={(!testMode && stock <= 0) || opening}
         >
           {opening ? <LoaderCircle className="spin" size={19} /> : <Zap size={19} />}
-          <span>{stock > 0 ? "Ouvrir le booster" : "Recharge en cours"}</span>
-          {stock > 0 ? <ChevronRight size={19} /> : null}
+          <span>{testMode || stock > 0 ? "Ouvrir le booster" : "Recharge en cours"}</span>
+          {testMode || stock > 0 ? <ChevronRight size={19} /> : null}
         </button>
         <button
           className="secondary-action"
           onClick={onUseHourglass}
-          disabled={stock >= pack.max || game.player.hourglasses <= 0 || usingHourglass}
+          disabled={
+            testMode ||
+            stock >= pack.max ||
+            game.player.hourglasses <= 0 ||
+            usingHourglass
+          }
         >
           <Hourglass size={15} />
           <span>
@@ -453,24 +420,49 @@ function CollectionView({ game }: { game: GameState }) {
       </div>
 
       <div className="collection-grid">
-        {visibleCreators.map((creator) => {
-          const item = owned.get(creator.slug);
-          return (
-            <CreatorCard
-              key={creator.slug}
-              creator={creator}
-              variant={item?.bestVariant}
-              count={item?.count}
-              locked={!item}
-              compact
-            />
-          );
-        })}
+        {visibleCreators.map((creator) => (
+          <BinderCard key={creator.slug} creator={creator} item={owned.get(creator.slug)} />
+        ))}
       </div>
       {!filtered.length ? (
         <div className="no-results">Aucune carte ne correspond à ce filtre.</div>
       ) : null}
     </div>
+  );
+}
+
+/**
+ * Carte du classeur : inclinable au doigt (scroll vertical préservé) et
+ * retournable au tap. Les cartes non obtenues restent plates — il n'y a rien à
+ * retourner, le dos masquerait le cadenas.
+ */
+function BinderCard({
+  creator,
+  item,
+}: {
+  creator: Creator;
+  item: { count: number; bestVariant: CardVariant } | undefined;
+}) {
+  const [faceUp, setFaceUp] = useState(true);
+  if (!item) return <CreatorCard creator={creator} locked compact />;
+  return (
+    <Card3D
+      rarity={creator.rarity}
+      variant={item.bestVariant}
+      faceUp={faceUp}
+      mode="scroll-safe"
+      onFlip={() => setFaceUp((value) => !value)}
+      flipLabel={faceUp ? `Voir le dos de ${creator.displayName}` : `Voir ${creator.displayName}`}
+      className="binder-card"
+      face={
+        <CreatorCard
+          creator={creator}
+          variant={item.bestVariant}
+          count={item.count}
+          compact
+        />
+      }
+    />
   );
 }
 
@@ -581,13 +573,16 @@ function MissionsView({ game }: { game: GameState }) {
 
 function ProfileView({
   game,
+  testMode,
   onNotice,
   onError,
 }: {
   game: GameState;
+  testMode: boolean;
   onNotice: (message: string) => void;
   onError: (message: string) => void;
 }) {
+  const soundOn = useSoundSettings();
   const [importOpen, setImportOpen] = useState(false);
   const [importText, setImportText] = useState("");
   const [exportText, setExportText] = useState<string | null>(null);
@@ -656,6 +651,49 @@ function ProfileView({
           <span>boosters</span>
         </article>
       </div>
+
+      <div className="section-heading compact-heading">
+        <div>
+          <p className="eyebrow">OUTILS</p>
+          <h2>Outils et réglages</h2>
+        </div>
+      </div>
+      <section className="settings-list" aria-label="Outils et réglages">
+        <button
+          type="button"
+          className={`settings-row settings-action ${testMode ? "is-on" : ""}`}
+          role="switch"
+          aria-checked={testMode}
+          onClick={() => testModeStore.set(!testMode)}
+        >
+          <span className="settings-icon purple"><Zap size={17} /></span>
+          <div>
+            <strong>Mode test — ouvertures illimitées</strong>
+            <span>
+              Rejoue l&apos;ouverture en boucle : ni booster consommé, ni carte,
+              ni XP ajoutés. Ta vraie progression n&apos;est pas touchée.
+            </span>
+          </div>
+          <span className="switch" aria-hidden="true"><i /></span>
+        </button>
+        <button
+          type="button"
+          className={`settings-row settings-action ${soundOn ? "is-on" : ""}`}
+          role="switch"
+          aria-checked={soundOn}
+          onClick={() => soundSettings.set(!soundOn)}
+        >
+          <span className="settings-icon blue"><Volume2 size={17} /></span>
+          <div>
+            <strong>Son et vibrations de l&apos;ouverture</strong>
+            <span>
+              Crissement du foil, souffle des cartes, clic du retournement —
+              tout est synthétisé, aucun fichier son n&apos;est embarqué.
+            </span>
+          </div>
+          <span className="switch" aria-hidden="true"><i /></span>
+        </button>
+      </section>
 
       <div className="section-heading compact-heading">
         <div>
@@ -733,55 +771,6 @@ function ProfileView({
   );
 }
 
-function RevealOverlay({
-  cards,
-  index,
-  onNext,
-  onClose,
-}: {
-  cards: DrawnCard[];
-  index: number;
-  onNext: () => void;
-  onClose: () => void;
-}) {
-  const card = cards[index];
-  const creator = card ? CREATOR_BY_SLUG.get(card.creatorSlug) : undefined;
-  if (!card || !creator) return null;
-  const isLast = index === cards.length - 1;
-  return (
-    <div className="reveal-overlay" role="dialog" aria-modal="true" aria-label="Résultat du booster">
-      <div className={`reveal-ambient rarity-${card.rarity}`} />
-      <div className="reveal-header">
-        <span>{index + 1} / {cards.length}</span>
-        <div className="reveal-dots">
-          {cards.map((item, dotIndex) => (
-            <i key={item.id} className={dotIndex <= index ? "active" : ""} />
-          ))}
-        </div>
-        <button onClick={onClose} aria-label="Fermer"><X size={20} /></button>
-      </div>
-      <div className="reveal-stage">
-        {card.isNew ? <span className="new-badge"><Sparkles size={12} /> NOUVELLE</span> : null}
-        <CreatorCard
-          key={card.id}
-          creator={creator}
-          variant={card.variant}
-          className="reveal-card"
-        />
-        <div className="reveal-name">
-          <p>#{creator.rank} · {RARITY_META[card.rarity].label}</p>
-          <h2>{creator.displayName}</h2>
-          <span>{creator.category}</span>
-        </div>
-      </div>
-      <button className="reveal-next" onClick={isLast ? onClose : onNext}>
-        <span>{isLast ? "Ranger dans le classeur" : "Révéler la suivante"}</span>
-        {isLast ? <BookOpen size={18} /> : <ChevronRight size={18} />}
-      </button>
-    </div>
-  );
-}
-
 const NAV_ITEMS: { id: Tab; label: string; icon: React.ReactNode }[] = [
   { id: "home", label: "Accueil", icon: <Home size={21} /> },
   { id: "collection", label: "Classeur (500)", icon: <BookOpen size={21} /> },
@@ -793,11 +782,12 @@ export function CreatorDeckApp() {
   const state = useGame();
   const now = useNow(1_000);
   const [tab, setTab] = useState<Tab>("home");
-  const [selectedPack, setSelectedPack] = useState<PackType>("live");
-  const [opening, setOpening] = useState(false);
+  // Un seul booster pour l'instant : le second concept reviendra plus tard.
+  const selectedPack: PackType = "live";
+  const testMode = useTestMode();
+  // Booster en cours d'ouverture : `null` = pas de cinématique à l'écran.
+  const [cinemaPack, setCinemaPack] = useState<PackType | null>(null);
   const [usingHourglass, setUsingHourglass] = useState(false);
-  const [drawnCards, setDrawnCards] = useState<DrawnCard[]>([]);
-  const [revealIndex, setRevealIndex] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
 
@@ -814,24 +804,27 @@ export function CreatorDeckApp() {
     setNotice(message);
   }, []);
 
+  /**
+   * Ouvre la cinématique. Le tirage n'a PAS lieu ici : il est déclenché par la
+   * cinématique au moment où la déchirure aboutit, pour que le suspense précède
+   * réellement la consommation du booster.
+   */
   function handleOpenPack() {
-    if (!game || opening) return;
-    setOpening(true);
+    if (!game || cinemaPack) return;
+    const stock = selectedPack === "live" ? game.player.livePacks : game.player.archivePacks;
+    if (!testMode && stock <= 0) {
+      showError("Aucun booster disponible pour le moment.");
+      return;
+    }
     setError(null);
-    // Petit délai volontaire : le tirage est instantané en local, mais la
-    // révélation mérite son moment de suspense.
-    window.setTimeout(() => {
-      try {
-        const cards = gameStore.openPack(selectedPack);
-        setDrawnCards(cards);
-        setRevealIndex(0);
-      } catch (caught) {
-        showError(caught instanceof Error ? caught.message : "Ouverture impossible.");
-      } finally {
-        setOpening(false);
-      }
-    }, OPENING_DELAY_MS);
+    setCinemaPack(selectedPack);
   }
+
+  const drawCinemaPack = useCallback(() => {
+    if (!cinemaPack) throw new Error("Aucun booster à ouvrir.");
+    // Mode test : même tirage, mais rien n'est écrit dans la sauvegarde.
+    return testMode ? gameStore.previewPack(cinemaPack) : gameStore.openPack(cinemaPack);
+  }, [cinemaPack, testMode]);
 
   function handleUseHourglass() {
     if (!game || usingHourglass) return;
@@ -846,11 +839,6 @@ export function CreatorDeckApp() {
     }
   }
 
-  function closeReveal() {
-    setDrawnCards([]);
-    setRevealIndex(0);
-  }
-
   if (!game) return <LoadingScreen />;
 
   return (
@@ -861,18 +849,23 @@ export function CreatorDeckApp() {
           <HomeView
             game={game}
             selectedPack={selectedPack}
-            setSelectedPack={setSelectedPack}
             onOpen={handleOpenPack}
             onUseHourglass={handleUseHourglass}
-            opening={opening}
+            opening={cinemaPack !== null}
             usingHourglass={usingHourglass}
+            testMode={testMode}
             now={now}
           />
         ) : null}
         {tab === "collection" ? <CollectionView game={game} /> : null}
         {tab === "missions" ? <MissionsView game={game} /> : null}
         {tab === "profile" ? (
-          <ProfileView game={game} onNotice={showNotice} onError={showError} />
+          <ProfileView
+            game={game}
+            testMode={testMode}
+            onNotice={showNotice}
+            onError={showError}
+          />
         ) : null}
       </div>
 
@@ -902,19 +895,13 @@ export function CreatorDeckApp() {
           <button onClick={() => setNotice(null)} aria-label="Fermer"><X size={15} /></button>
         </div>
       ) : null}
-      {opening ? (
-        <div className="opening-loader" aria-live="polite">
-          <div className="mini-pack"><span>CD</span></div>
-          <strong>Scellement du tirage Top 500…</strong>
-          <span>{PACKS[selectedPack].size} cartes uniques en préparation.</span>
-        </div>
-      ) : null}
-      {drawnCards.length ? (
-        <RevealOverlay
-          cards={drawnCards}
-          index={revealIndex}
-          onNext={() => setRevealIndex((value) => Math.min(value + 1, drawnCards.length - 1))}
-          onClose={closeReveal}
+      {cinemaPack ? (
+        <PackOpening
+          packType={cinemaPack}
+          onDraw={drawCinemaPack}
+          onClose={() => setCinemaPack(null)}
+          onError={showError}
+          onSelectPackType={setCinemaPack}
         />
       ) : null}
     </main>

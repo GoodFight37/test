@@ -1,0 +1,29 @@
+name: APK Android (debug)
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  apk:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 21
+      # Le SDK Android est préinstallé sur les machines GitHub (ANDROID_HOME défini) ;
+      # le plugin Android Gradle télécharge lui-même les composants manquants.
+      - run: npm ci
+      - run: npm run lint && npm run typecheck && npm test
+      - run: npm run android:debug
+      - uses: actions/upload-artifact@v4
+        with:
+          name: creatordeck-debug-apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk

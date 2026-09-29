@@ -27,6 +27,40 @@ html {
   background: #06050a;
 }
 
+/* =========================================================================
+ * POLICES — extraites de GoodFight37/pkmn (dump du jeu), voir public/fonts.
+ *   PocketGill  : Gill Sans Nova, texte et interface (comme l'app d'origine)
+ *   PocketFutura: Futura LT Pro Heavy, titres display et marques
+ * ========================================================================= */
+@font-face {
+  font-family: "PocketFutura";
+  src: url("/fonts/TPC_FuturaLTProHeavy.otf") format("opentype");
+  /* Un seul graisse embarquée (Heavy) : on la sert pour toutes les
+     demandes de graisse pour éviter le faux-gras synthétique. */
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "PocketGill";
+  src: url("/fonts/TPC_GillSansNovaMedium.otf") format("opentype");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "PocketGill";
+  src: url("/fonts/TPC_GillSansNovaBold.otf") format("opentype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+:root {
+  --font-ui: "PocketGill", Inter, ui-sans-serif, system-ui, -apple-system,
+    BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-display: "PocketFutura", Futura, "Trebuchet MS", sans-serif;
+}
+
 body {
   min-height: 100%;
   margin: 0;
@@ -34,7 +68,7 @@ body {
   background:
     radial-gradient(circle at 50% -8%, rgba(111, 65, 221, 0.18), transparent 34rem),
     #06050a;
-  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-family: var(--font-ui);
   -webkit-font-smoothing: antialiased;
 }
 
@@ -113,8 +147,7 @@ input:focus-visible {
 .settings-row,
 .info-note,
 .profile-card,
-.reveal-header,
-.brand-mark,
+  .brand-mark,
 .season-badge,
 .streak-pill,
 .completion-pill,
@@ -387,7 +420,8 @@ input:focus-visible {
     0 0 45px rgba(116, 71, 229, 0.25),
     inset 0 0 0 2px rgba(255, 255, 255, 0.06);
   transform: perspective(900px) rotateY(-5deg) rotateZ(2deg);
-  animation: pack-float 4s ease-in-out infinite;
+  /* Période réelle de `C_PackOpen_Pack_float` (3,333 s, boucle). */
+  animation: pack-float 3.333s ease-in-out infinite;
 }
 
 .pack-archive {
@@ -463,7 +497,7 @@ input:focus-visible {
 }
 
 .pack-brand strong {
-  font-family: Georgia, serif;
+  font-family: var(--font-display);
   font-size: 27px;
   letter-spacing: -0.05em;
 }
@@ -568,8 +602,7 @@ input:focus-visible {
   font-size: 10px;
 }
 
-.primary-action,
-.reveal-next {
+.primary-action {
   display: flex;
   width: 100%;
   min-height: 50px;
@@ -590,8 +623,7 @@ input:focus-visible {
 .primary-action svg:last-child { margin-left: auto; margin-right: 15px; }
 .primary-action svg:first-child { margin-left: 15px; }
 .primary-action span { flex: 1; }
-.primary-action:active:not(:disabled),
-.reveal-next:active { transform: scale(0.985); }
+.primary-action:active:not(:disabled) { transform: scale(0.985); }
 .primary-action:disabled { opacity: 0.46; cursor: not-allowed; box-shadow: none; }
 
 .secondary-action {
@@ -742,7 +774,7 @@ input:focus-visible {
 }
 
 .card-photo-shade {
-  background: linear-gradient(180deg, rgba(5,4,10,.12) 0%, transparent 38%, rgba(8,7,13,.18) 54%, rgba(8,7,13,.98) 91%);
+  background: linear-gradient(180deg, rgba(5,4,10,.12) 0%, transparent 34%, rgba(8,7,13,.38) 56%, rgba(8,7,13,.98) 92%);
 }
 
 .card-topline {
@@ -803,13 +835,25 @@ input:focus-visible {
   left: 9px;
 }
 
+/* Filet de rareté : petit trait lumineux qui annonce la couleur du nom. */
+.card-copy::before {
+  content: "";
+  display: block;
+  width: 30px;
+  height: 3px;
+  margin-bottom: 5px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, var(--rarity), transparent);
+  box-shadow: 0 0 10px -2px var(--rarity-glow);
+}
+
 .card-copy p {
-  margin: 0 0 2px;
+  margin: 0 0 3px;
   overflow: hidden;
   color: var(--rarity);
-  font-size: 6px;
-  font-weight: 750;
-  letter-spacing: .04em;
+  font-size: 7.5px;
+  font-weight: 800;
+  letter-spacing: .07em;
   text-overflow: ellipsis;
   text-transform: uppercase;
   white-space: nowrap;
@@ -818,12 +862,20 @@ input:focus-visible {
 .card-copy h3 {
   margin: 0;
   overflow: hidden;
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: clamp(11px, 3.2vw, 17px);
-  line-height: 1.05;
-  letter-spacing: -.035em;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  color: #fff;
+  font-family: var(--font-display);
+  font-size: clamp(14px, 4vw, 22px);
+  font-weight: 900;
+  line-height: 1.04;
+  letter-spacing: -.02em;
+  text-shadow: 0 1px 2px rgba(0,0,0,.85), 0 0 16px rgba(0,0,0,.55);
+  text-transform: uppercase;
+  /* Jusqu'à 2 lignes : les noms longs ne sont plus coupés au milieu. */
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  white-space: normal;
+  word-break: break-word;
 }
 
 .card-footerline {
@@ -841,7 +893,7 @@ input:focus-visible {
 
 .creator-card.is-compact { border-radius: 10px; }
 .creator-card.is-compact .card-copy { right: 7px; bottom: 7px; left: 7px; }
-.creator-card.is-compact .card-copy h3 { font-size: clamp(9px, 2.8vw, 13px); }
+.creator-card.is-compact .card-copy h3 { font-size: clamp(11px, 3.5vw, 15px); }
 .creator-card.is-compact .card-topline { top: 6px; right: 6px; left: 6px; }
 .creator-card.is-compact .card-series { display: none; }
 .creator-card.is-compact .card-rarity { margin-left: auto; }
@@ -852,7 +904,7 @@ input:focus-visible {
 .creator-card.is-locked { border-color: rgba(255,255,255,.075); box-shadow: none; }
 .creator-card.is-locked .card-copy p,
 .creator-card.is-locked .card-footerline { color: rgba(255,255,255,.22); }
-.creator-card.is-locked .card-copy h3 { color: rgba(255,255,255,.32); letter-spacing: .1em; }
+.creator-card.is-locked .card-copy h3 { color: rgba(255,255,255,.32); letter-spacing: .1em; text-shadow: none; }
 
 .card-lock {
   position: absolute;
@@ -1066,70 +1118,11 @@ input:focus-visible {
 .toast-error button { display: grid; width: 24px; height: 24px; place-items: center; border: 0; border-radius: 6px; background: rgba(255,255,255,.08); cursor: pointer; }
 .toast-notice { color: #d6ffe9; border-color: rgba(80,217,160,.28); background: rgba(16,52,40,.95); }
 
-.opening-loader,
-.reveal-overlay {
-  position: fixed;
-  z-index: 100;
-  inset: 0;
-  width: 100%;
-  max-width: 560px;
-  min-height: 100dvh;
-  margin: 0 auto;
-  background: rgba(7, 5, 13, .98);
-}
-
-.opening-loader {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-direction: column;
-  gap: 9px;
-}
-.opening-loader strong { margin-top: 13px; font-size: 14px; }
-.opening-loader > span { color: var(--muted); font-size: 9px; }
-.mini-pack { display: grid; width: 105px; height: 154px; place-items: center; border: 1px solid rgba(213,195,255,.5); border-radius: 12px; background: linear-gradient(145deg,#8151ed,#261647); box-shadow: 0 0 60px rgba(130,80,238,.35); animation: pack-pulse 1s ease-in-out infinite alternate; }
-.mini-pack span { font-size: 19px; font-weight: 900; }
-@keyframes pack-pulse { to { transform: translateY(-7px) rotate(2deg); box-shadow: 0 0 90px rgba(130,80,238,.52); } }
-
-.reveal-overlay { overflow: hidden; }
-.reveal-ambient { position: absolute; inset: 0; background: radial-gradient(circle at 50% 45%, var(--purple-glow, rgba(135,83,246,.34)), transparent 48%); }
-.reveal-ambient.rarity-legendary { --purple-glow: rgba(255,183,64,.38); }
-.reveal-ambient.rarity-epic { --purple-glow: rgba(161,98,255,.4); }
-.reveal-ambient.rarity-rare { --purple-glow: rgba(64,169,255,.34); }
-.reveal-ambient.rarity-uncommon { --purple-glow: rgba(67,214,156,.28); }
-.reveal-ambient.rarity-common { --purple-glow: rgba(140,149,167,.22); }
-
-.reveal-header {
-  position: relative;
-  z-index: 2;
-  height: calc(58px + env(safe-area-inset-top));
-  justify-content: space-between;
-  padding: env(safe-area-inset-top) 17px 0;
-}
-.reveal-header > span { width: 45px; color: var(--muted); font-size: 10px; }
-.reveal-header button { display: grid; width: 34px; height: 34px; place-items: center; color: var(--muted); border: 1px solid var(--line); border-radius: 10px; background: rgba(255,255,255,.04); cursor: pointer; }
-.reveal-dots { display: flex; gap: 5px; }
-.reveal-dots i { width: 16px; height: 3px; border-radius: 99px; background: rgba(255,255,255,.1); }
-.reveal-dots i.active { background: #a884ff; }
-
-.reveal-stage {
-  position: relative;
-  z-index: 2;
-  display: flex;
-  height: calc(100dvh - 145px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
-  align-items: center;
-  justify-content: center;
-  flex-direction: column;
-  padding: 13px 27px 4px;
-}
-.reveal-card { width: min(68vw, 300px); max-height: 63vh; animation: card-reveal 550ms cubic-bezier(.2,.8,.2,1) both; }
-@keyframes card-reveal { from { opacity: 0; transform: translateY(25px) rotateY(70deg) scale(.88); } to { opacity: 1; transform: none; } }
 .new-badge { position: relative; z-index: 5; justify-content: center; gap: 4px; margin-bottom: 9px; padding: 5px 9px; color: #231139; border-radius: 7px; background: #d4bfff; font-size: 8px; font-weight: 900; letter-spacing: .08em; }
 .reveal-name { margin-top: 16px; text-align: center; }
 .reveal-name p { margin: 0 0 3px; color: var(--purple-light); font-size: 8px; font-weight: 800; letter-spacing: .13em; text-transform: uppercase; }
-.reveal-name h2 { margin: 0; font-family: Georgia, serif; font-size: 25px; letter-spacing: -.04em; }
+.reveal-name h2 { margin: 0; font-family: var(--font-display); font-size: 25px; letter-spacing: -.04em; }
 .reveal-name span { color: var(--muted); font-size: 9px; }
-.reveal-next { position: absolute; z-index: 3; right: 18px; bottom: calc(17px + env(safe-area-inset-bottom)); left: 18px; width: auto; }
 
 .loading-screen {
   display: flex;
@@ -1152,6 +1145,7 @@ input:focus-visible {
   .welcome-row h1 { font-size: 22px; }
   .pack-stage { min-height: 370px; }
   .pack-artwork { width: 166px; height: 250px; }
+  .pack-tear-wrap { width: 166px; height: 250px; }
   .collection-grid { gap: 8px 6px; }
   .filter-chips { margin-inline: -14px; padding-inline: 14px; }
 }
@@ -1168,3 +1162,1104 @@ input:focus-visible {
     transition-duration: .01ms !important;
   }
 }
+
+/* =========================================================================
+ * CARTES 3D — inclinaison au doigt, reflet holo, retournement dos/face
+ * =========================================================================
+ * Trois nœuds imbriqués (voir src/components/card3d.tsx) : la perspective est
+ * portée par `.card3d`, l'inclinaison par `.card3d-tilt`, le retournement par
+ * `.card3d-flipper`. Séparer les trois évite qu'un `transform` en écrase un
+ * autre quand on incline ET qu'on retourne en même temps.
+ *
+ * `--holo` (0 → 1) vient de `effectIntensity(rareté, variante)` : c'est la
+ * rareté et la variante qui pilotent l'intensité, pas une classe par combinaison.
+ * ========================================================================= */
+
+.card3d {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 0.71;
+  perspective: 1100px;
+  perspective-origin: 50% 50%;
+  --tilt-rx: 0deg;
+  --tilt-ry: 0deg;
+  --shine-x: 50%;
+  --shine-y: 50%;
+  --tilt-scale: 1;
+  --holo: 0.3;
+  --flip-ms: 500ms; /* `C_CardGet_Card_flip_L` : clip de 500 ms */
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* `free` : les deux axes suivent le doigt (scène de révélation). */
+.card3d.mode-free { touch-action: none; }
+/* `scroll-safe` : le défilement vertical du classeur reste au navigateur. */
+.card3d.mode-scroll-safe { touch-action: pan-y; }
+
+.card3d-tilt {
+  position: absolute;
+  inset: 0;
+  transform: rotateX(var(--tilt-rx)) rotateY(var(--tilt-ry)) scale(var(--tilt-scale));
+  transform-style: preserve-3d;
+  transition: transform 420ms cubic-bezier(.2, .8, .2, 1);
+  will-change: transform;
+}
+
+/* Pendant le geste, la carte colle au doigt ; au relâchement elle retombe. */
+.card3d.is-dragging .card3d-tilt { transition: transform 90ms linear; }
+
+.card3d-flipper {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+  /* Courbe mesurée sur `C_CardGet_Card_flip_L` : −71,6° → 0°, forte
+     décélération (≈ easeOutQuint : la moitié du swing en 33 ms). */
+  transition: transform var(--flip-ms) cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform;
+}
+.card3d-flipper.is-face-down { transform: rotateY(180deg); }
+
+.card3d-face {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+.card3d-back { transform: rotateY(180deg); }
+
+/* La carte occupe exactement la face : pas de double ratio d'aspect. */
+.card3d-face .creator-card { height: 100%; aspect-ratio: auto; }
+
+/* Bouton de retournement réel mais invisible : rôle au clavier / lecteur d'écran. */
+.card3d-flip-button {
+  position: absolute;
+  z-index: 10;
+  top: 0;
+  left: 0;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+  background: transparent;
+}
+
+/* Dos de carte : dessin 100 % CSS, aucune image à charger (hors ligne). */
+.card-back {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  overflow: hidden;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 5px;
+  border: 1px solid color-mix(in srgb, var(--rarity, #8f64ff) 60%, white 8%);
+  border-radius: 13px;
+  background:
+    radial-gradient(circle at 50% 34%, color-mix(in srgb, var(--rarity, #8f64ff) 55%, transparent), transparent 58%),
+    linear-gradient(155deg, #3b2080 0%, #1a1038 46%, #0a0716 100%);
+  box-shadow:
+    0 10px 20px -12px rgba(0, 0, 0, .9),
+    inset 0 0 0 2px rgba(255, 255, 255, .05);
+}
+.card-back-grid {
+  position: absolute;
+  inset: 0;
+  opacity: .35;
+  background-image:
+    repeating-linear-gradient(45deg, transparent 0 9px, rgba(255, 255, 255, .055) 10px, transparent 11px),
+    repeating-linear-gradient(-45deg, transparent 0 9px, rgba(255, 255, 255, .055) 10px, transparent 11px);
+}
+.card-back-halo {
+  position: absolute;
+  width: 74%;
+  aspect-ratio: 1;
+  border: 1px solid rgba(255, 255, 255, .16);
+  border-radius: 50%;
+  box-shadow: 0 0 34px -6px var(--rarity-glow, rgba(143, 100, 255, .6));
+}
+.card-back-mark {
+  position: relative;
+  font-family: var(--font-display);
+  font-size: clamp(26px, 8vw, 40px);
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: -.05em;
+  color: white;
+  text-shadow: 0 0 26px var(--rarity-glow, rgba(193, 168, 255, .8));
+}
+.card-back-word {
+  position: relative;
+  font-size: 7px;
+  font-weight: 900;
+  letter-spacing: .44em;
+  color: rgba(255, 255, 255, .78);
+}
+.card-back-sub {
+  position: relative;
+  font-size: 6px;
+  letter-spacing: .3em;
+  color: rgba(255, 255, 255, .42);
+}
+
+/* ---- Reflet holo & prisme, pilotés par l'angle --------------------------
+ * La tache lumineuse suit `--shine-x/--shine-y` (doigt), le prisme tourne avec
+ * `--tilt-ry`. Hors contexte 3D (`--holo` non défini), les anciennes règles de
+ * variante ci-dessus continuent de s'appliquer tel quel.                    */
+.card3d .creator-card .card-foil {
+  inset: -45%;
+  opacity: calc(var(--holo, 0) * .85);
+  background:
+    radial-gradient(34% 26% at var(--shine-x) var(--shine-y), rgba(255, 255, 255, .85), transparent 72%),
+    linear-gradient(115deg, transparent 12%, rgba(255, 255, 255, .34) 34%, rgba(142, 114, 255, .26) 50%, rgba(64, 169, 255, .2) 64%, transparent 76%);
+  transform: rotate(calc(var(--tilt-ry, 0deg) * -1));
+  transition: opacity 260ms ease;
+}
+
+.card-prism {
+  position: absolute;
+  z-index: 4;
+  inset: -55%;
+  pointer-events: none;
+  opacity: calc(var(--holo, 0) * var(--holo, 0) * .55);
+  background: conic-gradient(from 0deg at 50% 50%, #ff4d4d, #ffbe55, #50d9a0, #40a9ff, #a46cff, #ff4d4d);
+  mix-blend-mode: overlay;
+  filter: blur(14px) saturate(1.45);
+  transform: rotate(calc(var(--tilt-ry, 0deg) * 3));
+  transition: opacity 300ms ease;
+}
+
+/* =========================================================================
+ * CINÉMATIQUE D'OUVERTURE DE BOOSTER
+ * ========================================================================= */
+
+.pack-cinema {
+  position: fixed;
+  z-index: 100;
+  inset: 0;
+  display: flex;
+  width: 100%;
+  max-width: 560px;
+  min-height: 100dvh;
+  margin: 0 auto;
+  overflow: hidden;
+  flex-direction: column;
+  outline: none;
+  background: rgba(7, 5, 13, .98);
+}
+
+.pack-cinema-ambient {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 50% 44%, rgba(135, 83, 246, .34), transparent 52%),
+    radial-gradient(circle at 50% 104%, rgba(48, 28, 96, .5), transparent 58%);
+  transition: background 500ms ease;
+}
+.pack-cinema.rarity-legendary .pack-cinema-ambient {
+  background:
+    radial-gradient(circle at 50% 44%, rgba(255, 183, 64, .36), transparent 52%),
+    radial-gradient(circle at 50% 104%, rgba(96, 58, 12, .5), transparent 58%);
+}
+.pack-cinema.rarity-epic .pack-cinema-ambient {
+  background:
+    radial-gradient(circle at 50% 44%, rgba(161, 98, 255, .36), transparent 52%),
+    radial-gradient(circle at 50% 104%, rgba(56, 31, 104, .5), transparent 58%);
+}
+.pack-cinema.rarity-rare .pack-cinema-ambient {
+  background:
+    radial-gradient(circle at 50% 44%, rgba(64, 169, 255, .3), transparent 52%),
+    radial-gradient(circle at 50% 104%, rgba(24, 51, 96, .5), transparent 58%);
+}
+.pack-cinema.rarity-uncommon .pack-cinema-ambient {
+  background:
+    radial-gradient(circle at 50% 44%, rgba(67, 214, 156, .26), transparent 52%),
+    radial-gradient(circle at 50% 104%, rgba(22, 66, 51, .5), transparent 58%);
+}
+
+.pack-cinema-header {
+  position: relative;
+  z-index: 6;
+  display: flex;
+  height: calc(58px + env(safe-area-inset-top));
+  align-items: center;
+  justify-content: space-between;
+  padding: env(safe-area-inset-top) 17px 0;
+}
+.pack-cinema-header > span { width: 54px; color: var(--muted); font-size: 10px; }
+.pack-cinema-header button {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  color: var(--muted);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, .04);
+  cursor: pointer;
+}
+.pack-cinema-dots { display: flex; align-items: center; gap: 5px; }
+.pack-cinema-dots i {
+  width: 16px;
+  height: 3px;
+  border-radius: 99px;
+  background: rgba(255, 255, 255, .1);
+  transition: background 240ms ease;
+}
+.pack-cinema-dots i.done { background: #a884ff; }
+
+.pack-cinema-stage {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  padding: 6px 24px;
+}
+
+.pack-cinema-footer {
+  position: relative;
+  z-index: 6;
+  padding: 0 17px calc(17px + env(safe-area-inset-bottom));
+}
+.pack-cinema-hint {
+  min-height: 14px;
+  margin: 0 0 9px;
+  color: var(--muted);
+  font-size: 10px;
+  text-align: center;
+}
+
+/* ---- 1-3. Pack fermé, déchirure, éclatement ---------------------------- */
+
+.pack-tear-wrap {
+  position: relative;
+  width: 178px;
+  height: 268px;
+  touch-action: none;
+  cursor: grab;
+  animation: none;
+}
+.pack-tear-wrap:active { cursor: grabbing; }
+
+/* Les deux pièces du carton : le rabat (haut) et le reste (bas), découpés par
+ * la même dentelure générée en pur JS (`tearClipPath` / `tearBaseClipPath`). */
+.pack-tear-base,
+.pack-tear-flap {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+}
+.pack-tear-flap { clip-path: var(--tear-clip); }
+.pack-tear-base { clip-path: var(--tear-base-clip); }
+
+/* Le pack cinématique est piloté à la main : on coupe la lévitation de l'accueil
+ * pour que les deux pièces coïncident au pixel près. */
+.pack-tear-wrap .pack-artwork {
+  animation: none;
+  transform: none;
+}
+
+/* Lumière du contenu, visible uniquement par l'écart que creuse la déchirure. */
+.pack-tear-inside {
+  position: absolute;
+  inset: -8%;
+  pointer-events: none;
+  opacity: calc(var(--tear) * .95);
+  background: radial-gradient(58% 40% at 50% 44%, rgba(255, 255, 255, .95), rgba(193, 168, 255, .6) 42%, transparent 74%);
+  filter: blur(12px);
+}
+
+/* Trace lumineuse laissée par le doigt sur le carton. */
+.pack-tear-seam {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: calc(var(--tear) * .9);
+  background: radial-gradient(130% 34% at 50% calc((52 - var(--tear) * 16) * 1%), rgba(255, 255, 255, .95), transparent 66%);
+  mix-blend-mode: screen;
+}
+
+/* Le rabat monte avec le doigt et se redresse. */
+.pack-tear-flap {
+  transform: translateY(calc(var(--tear) * -62px)) rotate(calc(var(--tear) * -5deg));
+  transform-origin: 50% 100%;
+}
+
+/* Tremblement du carton, amplitude proportionnelle au tiret du doigt. */
+@keyframes pack-tear-shake {
+  0%, 100% { transform: translate3d(calc(var(--shake-amp) * -1px), 0, 0); }
+  25% { transform: translate3d(calc(var(--shake-amp) * 1px), 1.5px, 0); }
+  50% { transform: translate3d(calc(var(--shake-amp) * -0.7px), -1.5px, 0); }
+  75% { transform: translate3d(calc(var(--shake-amp) * 0.8px), 0, 0); }
+}
+.pack-cinema.stage-tearing .pack-tear-wrap { animation: pack-tear-shake 90ms linear infinite; }
+
+.pack-tear-hint {
+  position: absolute;
+  bottom: -44px;
+  left: 50%;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  padding: 7px 13px;
+  white-space: nowrap;
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  color: #ded4ff;
+  background: rgba(255, 255, 255, .07);
+  box-shadow: 0 10px 24px -14px #000;
+  font-size: 10px;
+  font-weight: 750;
+  transform: translateX(-50%);
+  animation: hint-pulse 1.7s ease-in-out infinite;
+  pointer-events: none;
+}
+.pack-cinema.stage-tearing .pack-tear-hint,
+.pack-cinema.stage-burst .pack-tear-hint { opacity: 0; animation: none; }
+
+@keyframes hint-pulse {
+  0%, 100% { transform: translateX(-50%) translateY(0); opacity: .65; }
+  50% { transform: translateX(-50%) translateY(-5px); opacity: 1; }
+}
+
+/* Éclatement : le rabat s'envole, le pack résiduel s'efface, la lumière
+ * grandit avant que les cartes ne jaillissent. */
+/* Lévitation du pack fermé : même période que le clip du jeu. Le geste de
+ * déchirure la coupe (la scène `tearing` reprend la main sur le transform). */
+.pack-cinema.stage-sealed .pack-tear-wrap {
+  animation: pocket-float var(--float-ms, 3333ms) ease-in-out infinite;
+}
+@keyframes pocket-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-7px); }
+}
+
+.pack-cinema.stage-burst .pack-tear-flap {
+  transform: translateY(-420px) rotate(-16deg) scale(1.05);
+  opacity: 0;
+  transition:
+    transform var(--burst-ms, 620ms) cubic-bezier(.3, .05, .3, 1),
+    opacity var(--burst-ms, 620ms) ease-in;
+}
+.pack-cinema.stage-burst .pack-tear-base {
+  opacity: 0;
+  transform: scale(.88);
+  transition: transform var(--burst-ms, 620ms) ease-out, opacity var(--burst-ms, 620ms) ease-out;
+}
+.pack-cinema.stage-burst .pack-tear-inside {
+  opacity: 1;
+  filter: blur(30px) scale(1.15);
+  transition: all var(--burst-ms, 620ms) ease-out;
+}
+.pack-cinema.stage-pile .pack-tear-wrap,
+.pack-cinema.stage-revealing .pack-tear-wrap,
+.pack-cinema.stage-rare-flip .pack-tear-wrap,
+.pack-cinema.stage-revealed .pack-tear-wrap { display: none; }
+
+/* ---- 4. Pile de cartes faces cachées ---------------------------------- */
+
+.card-pile {
+  position: relative;
+  width: min(68vw, 300px);
+  aspect-ratio: 0.71;
+  touch-action: none;
+}
+
+.card-pile-slot {
+  position: absolute;
+  inset: 0;
+  transform: translate3d(var(--slot-x), var(--slot-y), var(--slot-z)) rotate(var(--slot-rot)) scale(var(--slot-scale));
+  transition: transform 340ms cubic-bezier(.2, .8, .2, 1), opacity 240ms ease;
+}
+.card-pile-slot.is-hidden { opacity: 0; pointer-events: none; }
+.card-pile-slot.is-active { transform: none; z-index: 90; }
+/* En attente de balayage, la carte du dessus est légèrement plus basse : elle
+ * « remonte » vers le centre au moment de la révélation. */
+.pack-cinema.stage-pile .card-pile-slot.is-active { transform: translate3d(0, 34px, 0) scale(.97); }
+/* Carte déjà révélée : mise de côté en bas à gauche. */
+.card-pile-slot.is-collected {
+  transform: translate3d(calc(var(--slot-x) - 46px), 150px, 0) rotate(-16deg) scale(.66);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.card-pile-drag {
+  position: relative;
+  height: 100%;
+  transform-style: preserve-3d;
+}
+.pack-cinema.stage-pile .card-pile-slot.is-active .card-pile-drag,
+.pack-cinema.stage-revealed .card-pile-slot.is-active .card-pile-drag {
+  transform: translate3d(var(--drag-x, 0px), calc(var(--drag-lift, 0px) * -1), 0) rotate(var(--drag-rot, 0deg));
+}
+
+/* Vol des cartes hors du pack, en cascade. */
+@keyframes pile-fly-in {
+  0% { transform: translate3d(0, 250px, 0) scale(.42) rotate(-12deg); opacity: 0; }
+  55% { opacity: 1; }
+  100% { transform: translate3d(0, 0, 0) scale(1) rotate(0deg); opacity: 1; }
+}
+.pack-cinema.stage-burst .card-pile-drag {
+  /* Sortie des cartes : ease-in-out mesuré sur
+     `C_PackOpen_Card_cardappear_front_01` (montée 0 → 3,73 u). */
+  animation: pile-fly-in var(--burst-ms, 620ms) cubic-bezier(0.45, 0, 0.55, 1) both;
+  animation-delay: calc(var(--stagger, 0) * 1ms);
+}
+
+.pile-card { width: 100%; }
+
+/* ---- 5-6. Révélation et retournement lent ------------------------------ */
+
+.pack-cinema-stage .reveal-name {
+  position: absolute;
+  z-index: 5;
+  right: 18px;
+  bottom: 2px;
+  left: 18px;
+  text-align: center;
+  animation: name-in 320ms ease both;
+}
+@keyframes name-in { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+
+/* Petit halo qui signale qu'une carte rare ou mieux est en train de se
+ * retourner : la carte elle-même gère le flip et les particules. */
+.card-pile-slot.is-rare .card3d-tilt::before {
+  position: absolute;
+  z-index: -1;
+  inset: -14%;
+  content: "";
+  border-radius: 24px;
+  background: radial-gradient(circle, color-mix(in srgb, var(--rarity-glow, #a46cff) 75%, transparent), transparent 68%);
+  animation: rare-breathe 1.5s ease-in-out infinite;
+}
+@keyframes rare-breathe {
+  0%, 100% { opacity: .5; transform: scale(.96); }
+  50% { opacity: 1; transform: scale(1.05); }
+}
+
+.particle-burst {
+  position: absolute;
+  z-index: 95;
+  inset: -28%;
+  width: 156%;
+  height: 156%;
+  pointer-events: none;
+  transition: opacity 300ms ease;
+}
+
+/* ---- 7. Récapitulatif -------------------------------------------------- */
+
+.pack-summary {
+  position: relative;
+  z-index: 2;
+  flex: 1;
+  overflow-y: auto;
+  padding: 4px 17px calc(26px + env(safe-area-inset-bottom));
+  animation: summary-in 420ms cubic-bezier(.2, .8, .2, 1) both;
+}
+@keyframes summary-in { from { opacity: 0; transform: translateY(26px); } to { opacity: 1; transform: none; } }
+
+.pack-summary h2 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 24px;
+  letter-spacing: -.04em;
+  text-align: center;
+}
+.pack-summary-gain {
+  margin: 4px 0 0;
+  color: var(--gold);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .1em;
+  text-align: center;
+  text-transform: uppercase;
+}
+.pack-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px 9px;
+  padding: 0;
+  margin: 22px 0 0;
+  list-style: none;
+}
+.pack-summary-item {
+  position: relative;
+  animation: summary-card 420ms cubic-bezier(.2, .8, .2, 1) both;
+}
+@keyframes summary-card {
+  from { opacity: 0; transform: translateY(20px) scale(.88); }
+  to { opacity: 1; transform: none; }
+}
+.pack-summary-new {
+  position: absolute;
+  z-index: 6;
+  top: -7px;
+  right: -5px;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  padding: 3px 5px;
+  border: 1px solid rgba(255, 255, 255, .35);
+  border-radius: 6px;
+  color: #231139;
+  background: #d4bfff;
+  box-shadow: 0 4px 10px -5px #000;
+  font-size: 7px;
+  font-weight: 900;
+  letter-spacing: .06em;
+}
+.pack-summary-item.rarity-legendary .pack-summary-new { background: var(--gold); }
+.pack-summary-item.rarity-epic .pack-summary-new { background: #c9aaff; }
+
+/* ---- Classeur : carte 3D au-dessus de la grille existante -------------- */
+
+.collection-grid > .card3d { width: 100%; }
+.binder-card { cursor: pointer; }
+
+/* ---- Hôte Unity (optionnel : absent du repo par défaut) ----------------- */
+
+.unity-cinema .unity-canvas {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  flex: 1;
+  min-height: 0;
+  background: transparent;
+  touch-action: none;
+}
+
+/* =========================================================================
+ * BOOSTER 3D — sachet scellé, matière métallique, sol réfléchissant
+ * ========================================================================= */
+
+.booster3d {
+  /* Présence façon Pocket : le pack occupe ~35 % de la hauteur d'écran.
+     Géométrie 100 % en variables — arêtes, crimp et reflet suivent. */
+  --bw: 192px;
+  --bh: 288px;
+  --bd: 7px;
+  --crimp-h: 18px;
+  --sheen: 0.5;
+  position: relative;
+  width: var(--bw);
+  height: var(--bh);
+  transform-style: preserve-3d;
+}
+
+.booster-shell {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+}
+
+.booster-face {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: 5px 5px 4px 4px;
+  background: #141022;
+}
+
+/* Le sachet est « soufflé » : l'impression est en avant, le dos en arrière. */
+.booster-front { transform: translateZ(var(--bd)); }
+.booster-back {
+  transform: translateZ(calc(var(--bd) * -1)) rotateY(180deg);
+  background: linear-gradient(180deg, #241a44 0%, #150f2c 55%, #0d0a18 100%);
+}
+
+/* Bande de dos : la couture longitudinale du sachet. */
+.booster-back-panel {
+  position: absolute;
+  inset: 8px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 3px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.06), transparent 40%);
+}
+.booster-seam {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 14px;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.14) 45%, rgba(0, 0, 0, 0.35) 55%, transparent);
+  transform: translateX(-50%);
+}
+
+/* Bords latéraux : c'est eux qui donnent l'épaisseur du sachet vu de 3/4. */
+.booster-edge {
+  position: absolute;
+  left: 50%;
+  top: var(--crimp-h);
+  bottom: var(--crimp-h);
+  width: calc(var(--bd) * 2);
+  margin-left: calc(var(--bd) * -1);
+  background: linear-gradient(180deg, #aab2c8 0%, #6a7189 22%, #3b4055 62%, #868da4 100%);
+}
+.booster-edge-left {
+  transform: translateX(calc(var(--bw) / -2)) rotateY(-90deg);
+  background: linear-gradient(180deg, #c9d0e2 0%, #7d859d 24%, #454a60 64%, #989fb6 100%);
+}
+.booster-edge-right {
+  transform: translateX(calc(var(--bw) / 2)) rotateY(-90deg);
+  background: linear-gradient(180deg, #aeb6cc 0%, #666d85 24%, #363b4f 64%, #868da4 100%);
+}
+
+/* ---- Soudures scellées (le fameux « crimp » des vrais boosters) --------- */
+
+.booster-crimp {
+  position: absolute;
+  z-index: 3;
+  left: 0;
+  width: 100%;
+  height: var(--crimp-h);
+  background:
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.16) 0 1px, rgba(0, 0, 0, 0.14) 1px 3px),
+    linear-gradient(180deg, #d9dfef 0%, #a7afc6 38%, #7d8499 70%, #cfd6e8 100%);
+  transform: translateZ(calc(var(--bd) + 0.6px));
+}
+.booster-crimp-top {
+  top: 0;
+  clip-path: var(--crimp-top);
+}
+.booster-crimp-bottom {
+  bottom: 0;
+  clip-path: var(--crimp-bottom);
+  background:
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.16) 0 1px, rgba(0, 0, 0, 0.14) 1px 3px),
+    linear-gradient(0deg, #d9dfef 0%, #a7afc6 38%, #7d8499 70%, #cfd6e8 100%);
+}
+
+/* Trait de scellement : la ligne brillante sous la soudure. */
+.booster-seal {
+  position: absolute;
+  z-index: 4;
+  left: 2px;
+  right: 2px;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.9) 25%, rgba(255, 255, 255, 0.55) 75%, transparent);
+  filter: blur(0.3px);
+  transform: translateZ(calc(var(--bd) + 1px));
+}
+.booster-seal-top { top: var(--crimp-h); }
+.booster-seal-bottom { bottom: var(--crimp-h); }
+
+/* ---- Impression + matière --------------------------------------------- */
+
+/* L'art du jeu remplit le sachet : on neutralise la mise en page de l'accueil. */
+.booster-front .pack-artwork {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  transform: none;
+  animation: none;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+/* Plis verticaux du film métallisé. */
+.booster-wrinkle {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.5;
+  background-image:
+    repeating-linear-gradient(92deg, rgba(255, 255, 255, 0.07) 0 2px, transparent 2px 9px, rgba(0, 0, 0, 0.09) 9px 13px, transparent 13px 27px);
+}
+
+.booster-foil,
+.booster-gloss,
+.booster-shade {
+  position: absolute;
+  z-index: 5;
+  inset: 0;
+  pointer-events: none;
+}
+
+/* Spéculaires fixes : le côté métallique du sachet. */
+.booster-foil {
+  background:
+    linear-gradient(104deg,
+      rgba(255, 255, 255, 0) 0%,
+      rgba(255, 255, 255, 0.45) 6%,
+      rgba(255, 255, 255, 0) 14%,
+      rgba(255, 255, 255, 0) 40%,
+      rgba(255, 255, 255, 0.3) 49%,
+      rgba(255, 255, 255, 0) 58%,
+      rgba(255, 255, 255, 0) 84%,
+      rgba(255, 255, 255, 0.24) 93%,
+      rgba(255, 255, 255, 0) 100%);
+  mix-blend-mode: screen;
+}
+
+/* Reflet balayant : suit l'orientation du paquet dans le carrousel. */
+.booster-gloss {
+  background: linear-gradient(
+    118deg,
+    rgba(255, 255, 255, 0) calc(var(--sheen) * 100% - 26%),
+    rgba(255, 255, 255, 0.55) calc(var(--sheen) * 100%),
+    rgba(255, 255, 255, 0) calc(var(--sheen) * 100% + 26%)
+  );
+  mix-blend-mode: screen;
+}
+
+/* Assombrissement des bords : donne le galet du sachet. */
+.booster-shade {
+  border-radius: 5px;
+  box-shadow:
+    inset 3px 0 10px -6px rgba(0, 0, 0, 0.75),
+    inset -3px 0 10px -6px rgba(0, 0, 0, 0.75),
+    inset 0 -16px 22px -18px rgba(0, 0, 0, 0.9),
+    inset 0 14px 20px -16px rgba(0, 0, 0, 0.7);
+}
+
+/* ---- Réflexion sur le sol ---------------------------------------------- */
+
+.booster-with-reflection {
+  position: relative;
+}
+/* En position absolue : le reflet n'ajoute aucune hauteur au paquet, il
+   déborde sous lui et la scène le rogne naturellement. */
+.booster-reflection {
+  position: absolute;
+  top: calc(100% + 5px);
+  right: 0;
+  left: 0;
+  opacity: 0.42;
+  filter: blur(1.1px) saturate(0.85);
+  transform: scaleY(-1);
+  transform-origin: top center;
+  -webkit-mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.85), transparent 62%);
+  mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.85), transparent 62%);
+  pointer-events: none;
+}
+.booster-reflection .booster3d { pointer-events: none; }
+
+/* =========================================================================
+ * CARROUSEL 3D — parcourir et choisir le booster au doigt
+ * ========================================================================= */
+
+.carousel-stage {
+  position: relative;
+  width: 100%;
+  height: min(56vh, 400px);
+  overflow: hidden;
+  touch-action: none;
+  cursor: grab;
+  perspective: 1100px;
+  perspective-origin: 50% 50%;
+}
+.carousel-stage.is-dragging { cursor: grabbing; }
+
+/* Sol clair + halo : le paquet se reflète comme sur une vitrine. */
+.carousel-floor {
+  position: absolute;
+  right: -20%;
+  bottom: 0;
+  left: -20%;
+  height: 46%;
+  pointer-events: none;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.55) 40%, transparent);
+}
+.carousel-glow {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 460px;
+  height: 300px;
+  pointer-events: none;
+  background: radial-gradient(circle, rgba(154, 122, 255, 0.3), transparent 62%);
+  filter: blur(6px);
+  transform: translate(-50%, -50%);
+}
+.booster-archive ~ .carousel-glow,
+.carousel-glow.archive {
+  background: radial-gradient(circle, rgba(255, 183, 64, 0.34), transparent 62%);
+}
+
+.carousel-track {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+}
+
+.carousel-item {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform-style: preserve-3d;
+  transform:
+    translate(-50%, -50%)
+    translateX(var(--cx, 0px))
+    translateZ(var(--cz, 0px))
+    rotateY(var(--cang, 0deg))
+    scale(var(--cs, 1));
+  transition: transform 460ms cubic-bezier(0.2, 0.85, 0.25, 1), opacity 320ms ease;
+  will-change: transform;
+}
+/* Pendant le geste, le paquet suit le doigt : pas de transition qui traîne. */
+.carousel-track.is-dragging .carousel-item {
+  transition: none;
+}
+.carousel-item.is-active { z-index: 5; }
+.carousel-item.is-out { opacity: 0; pointer-events: none; }
+
+.carousel-item .booster3d {
+  filter: drop-shadow(0 26px 30px rgba(40, 30, 80, 0.32));
+}
+.carousel-item:not(.is-active) .booster3d {
+  filter: drop-shadow(0 18px 24px rgba(40, 30, 80, 0.2)) saturate(0.9) brightness(0.94);
+}
+
+/* Bandeau d'information du paquet sélectionné. */
+.carousel-caption {
+  position: relative;
+  z-index: 4;
+  margin-top: 4px;
+  text-align: center;
+  animation: name-in 320ms ease both;
+}
+.carousel-caption .eyebrow { margin: 0 0 3px; }
+.carousel-caption h2 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 27px;
+  letter-spacing: -.04em;
+}
+.carousel-caption p {
+  margin: 4px auto 0;
+  max-width: 260px;
+  color: var(--muted);
+  font-size: 10px;
+}
+/* Un simple texte guidé : sans bordure ni fond, il ne doit pas se
+   déguiser en bouton cliquable. */
+.carousel-hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+  padding: 0;
+  color: #ded4ff;
+  font-size: 10px;
+  font-weight: 750;
+}
+
+/* Pastilles du carrousel. */
+.carousel-dots {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 12px;
+}
+.carousel-dots i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.22);
+  transition: background 200ms ease, transform 200ms ease;
+}
+.carousel-dots i.active {
+  background: var(--purple-light);
+  transform: scale(1.35);
+}
+
+/* =========================================================================
+ * SCÈNE CLAIRE — le flux d'ouverture se déroule sur fond clair,
+ * comme sur la référence fournie.
+ * ========================================================================= */
+
+.pack-cinema.is-light {
+  background: linear-gradient(180deg, #eef1fa 0%, #dfe6f7 46%, #cfd9f2 100%);
+  color: #191333;
+}
+.pack-cinema.is-light .pack-cinema-ambient { opacity: 0; }
+.pack-cinema.is-light .pack-cinema-header > span,
+.pack-cinema.is-light .pack-cinema-hint { color: #5a5480; }
+.pack-cinema.is-light .pack-cinema-header button {
+  color: #453f6b;
+  border-color: rgba(30, 20, 70, 0.16);
+  background: rgba(255, 255, 255, 0.7);
+}
+.pack-cinema.is-light .pack-cinema-dots i { background: rgba(30, 20, 70, 0.16); }
+.pack-cinema.is-light .pack-cinema-dots i.done { background: #7b4fe0; }
+.pack-cinema.is-light .carousel-hint { color: #3d2f77; }
+.pack-cinema.is-light .carousel-caption p { color: #5a5480; }
+.pack-cinema.is-light .reveal-name p { color: #6a3fd8; }
+.pack-cinema.is-light .reveal-name h2 { color: #171131; }
+.pack-cinema.is-light .reveal-name span { color: #625b86; }
+.pack-cinema.is-light .secondary-action {
+  color: #3d2f77;
+  border-color: rgba(30, 20, 70, 0.2);
+  background: rgba(255, 255, 255, 0.66);
+}
+.pack-cinema.is-light .pack-tear-hint {
+  color: #3d2f77;
+  border-color: rgba(30, 20, 70, 0.18);
+  background: rgba(255, 255, 255, 0.78);
+}
+.pack-cinema.is-light .pack-summary h2 { color: #171131; }
+.pack-cinema.is-light .pack-summary-gain { color: #a06b00; }
+.pack-cinema.is-light .card-back-mark,
+.pack-cinema.is-light .card-back-word,
+.pack-cinema.is-light .card-back-sub { color: #171131; }
+
+/* =========================================================================
+ * PILE DE CARTES VISIBLE DERRIÈRE LA CARTE INSPÉCTIONNÉE
+ * =========================================================================
+ * Sur la référence, la carte à l'écran est au sommet d'un vrai paquet : on
+ * voit son tranche, décomposée en couches arc-en-ciel. C'est ce bord qui donne
+ * immédiatement la sensation de « vraie carte en main ».
+ * ========================================================================= */
+
+.card3d-stack {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  transform-style: preserve-3d;
+}
+.card3d-stack i {
+  position: absolute;
+  inset: 0;
+  border-radius: 13px;
+  background: #161124;
+  box-shadow: inset 0 0 0 1.4px hsl(var(--h) 78% 66% / 0.95);
+  transform:
+    translateX(calc(var(--i) * -0.95px))
+    translateZ(calc(var(--i) * -1.5px));
+}
+/* Plusieurs couches superposées forment l'arc-en-ciel de la tranche. */
+.card3d-stack i:nth-child(1) { --h: 0; }
+.card3d-stack i:nth-child(2) { --h: 28; }
+.card3d-stack i:nth-child(3) { --h: 56; }
+.card3d-stack i:nth-child(4) { --h: 84; }
+.card3d-stack i:nth-child(5) { --h: 112; }
+.card3d-stack i:nth-child(6) { --h: 140; }
+.card3d-stack i:nth-child(7) { --h: 178; }
+.card3d-stack i:nth-child(8) { --h: 216; }
+.card3d-stack i:nth-child(9) { --h: 264; }
+.card3d-stack i:nth-child(10) { --h: 312; }
+
+/* La pile ne se voit qu'en 3/4 : à plat, elle est entièrement masquée. */
+.card3d:not(.has-rest) .card3d-stack { opacity: 0; }
+.card3d-stack { transition: opacity 260ms ease; }
+
+/* ---- Écran de choix (carrousel) ---------------------------------------- */
+
+.carousel-screen {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  padding: 0 0 6px;
+  flex-direction: column;
+}
+/* Marges auto plutôt que justify-content : centré, mais sans débordement
+   au-dessus de l'en-tête sur les écrans très courts. */
+.carousel-screen > .carousel-stage { margin-top: auto; }
+.carousel-screen > .carousel-dots { margin-bottom: auto; }
+
+/* Chaque paquet du carrousel est un vrai bouton : sélectionnable au clavier. */
+.carousel-item {
+  padding: 0;
+  border: 0;
+  outline-offset: 6px;
+  background: none;
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+}
+.carousel-item:focus-visible { outline: 2px solid #7b4fe0; }
+
+@media (max-width: 390px) {
+  .carousel-stage { height: min(52vh, 340px); }
+}
+
+/* ---- Déchirure sur scène claire ----------------------------------------
+ * La lueur par l'écart du sachet doit se lire sur un fond pâle : on la rend
+ * saturée plutôt que blanche (le blanc s'y confondrait).
+ * ------------------------------------------------------------------------ */
+.pack-cinema.is-light .pack-tear-inside {
+  background: radial-gradient(56% 40% at 50% 44%, #ffffff 0%, #b892ff 34%, rgba(147, 100, 255, 0) 74%);
+}
+.pack-cinema.is-light .pack-tear-seam {
+  background: radial-gradient(130% 34% at 50% calc((52 - var(--tear) * 16) * 1%), rgba(255, 255, 255, 0.98), rgba(196, 168, 255, 0.75) 58%, transparent 82%);
+  mix-blend-mode: normal;
+  filter: drop-shadow(0 0 4px rgba(126, 76, 240, 0.75));
+}
+/* L'éclatement gagne un flash chaud, plus lisible sur fond clair. */
+.pack-cinema.is-light.stage-burst .pack-tear-inside {
+  filter: blur(26px) saturate(1.4);
+}
+/* Les cartes doivent se détacher du fond clair. */
+.pack-cinema.is-light .card-pile-slot .creator-card {
+  box-shadow:
+    0 16px 30px -16px rgba(40, 30, 90, 0.75),
+    0 0 22px -8px rgba(143, 100, 255, 0.55),
+    inset 0 0 0 2px rgba(255, 255, 255, 0.05);
+}
+
+/* =========================================================================
+ * MODE TEST — ouvertures illimitées
+ * ========================================================================= */
+
+.testmode-banner {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 11px;
+  padding: 7px 11px;
+  border: 1px solid rgba(193, 168, 255, 0.45);
+  border-radius: 9px;
+  color: #efe8ff;
+  background: linear-gradient(100deg, rgba(126, 76, 240, 0.35), rgba(126, 76, 240, 0.12));
+  font-size: 9px;
+  font-weight: 750;
+  line-height: 1.35;
+}
+.testmode-banner svg { flex: none; color: var(--purple-light); }
+
+/* Interrupteur : la rangée garde son gabarit, seul le voyant change. */
+.switch {
+  display: flex;
+  flex: none;
+  align-items: center;
+  width: 38px;
+  height: 22px;
+  padding: 2px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.1);
+  transition: background 200ms ease, border-color 200ms ease;
+}
+.switch i {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #cfc7e6;
+  transition: transform 220ms cubic-bezier(0.2, 0.8, 0.2, 1), background 200ms ease;
+}
+.settings-row.is-on .switch {
+  border-color: rgba(193, 168, 255, 0.65);
+  background: linear-gradient(100deg, #7e4cf0, #a879ff);
+}
+.settings-row.is-on .switch i {
+  background: #fff;
+  transform: translateX(16px);
+}
+.settings-row.is-on > div > strong { color: #e5d9ff; }

@@ -1,0 +1,11 @@
+# Sorties d'export Unity — à déposer en local, pas versionnées (poids).
+# Conserve le README ci-dessous versionné.
+Build/
+Framework/
+Data/
+*.data
+*.data.*
+*.symbols.json
+*.wasm
+*.js.map
+Loader/

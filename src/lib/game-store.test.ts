@@ -40,6 +40,38 @@ describe("gameStore", () => {
     vi.unstubAllGlobals();
   });
 
+  it("previewPack tire sans jamais toucher à la sauvegarde (mode test)", async () => {
+    const store = await freshStore();
+    store.subscribe(() => {});
+
+    const before = store.getSnapshot();
+    const savedBefore = data.get(SAVE_KEY);
+    expect(before).not.toBeNull();
+
+    const cards = store.previewPack("live");
+
+    // Le tirage est réel (bonne taille, ids uniques)…
+    expect(cards).toHaveLength(PACKS.live.size);
+    expect(new Set(cards.map((card) => card.id)).size).toBe(PACKS.live.size);
+
+    // …mais rien n'a bougé : même référence d'état, aucune écriture stockée.
+    expect(store.getSnapshot()).toBe(before);
+    expect(data.get(SAVE_KEY)).toBe(savedBefore);
+  });
+
+  it("previewPack calcule les nouveautés sur la vraie collection", async () => {
+    const store = await freshStore();
+    store.subscribe(() => {});
+
+    // Toute carte appartenant déjà à la collection n'est pas signalée NEW.
+    const first = store.previewPack("archive");
+    const owned = new Set(store.getSnapshot()!.cards.map((card) => card.creatorSlug));
+    for (const card of first) {
+      if (owned.has(card.creatorSlug)) expect(card.isNew).toBe(false);
+    }
+    expect(first.some((card) => card.isNew)).toBe(true); // collection vide au départ
+  });
+
   it("ne lit rien avant le premier abonnement, puis crée et persiste une partie", async () => {
     const store = await freshStore();
     expect(store.getSnapshot()).toBeNull();
