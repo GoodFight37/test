@@ -1,19 +1,14 @@
-## Chantier actif — tutoriel, remise à zéro et cadeau — 11 octobre 2026
+## Chantier livré localement — tutoriel, reset global, cadeau — 10 octobre 2026
 
-L’utilisateur demande une reprise à zéro pour **tous les comptes**, lui compris, afin d’introduire un tutoriel de première partie. Le compte, l’identité, le profil et les amis restent ; l’historique des échanges et ventes terminés reste ; les échanges ouverts sont annulés et les annonces actives retirées. La progression à réinitialiser comprend collections/cartes, réserves et journaux de tirage, soldes/ressources, missions et série, Paquet Scène et arène.
+Code commité localement sur `main` au SHA `f97ea42` (sans push). Migration additive `0044_tutoriel_reset_cadeau.sql`, tutoriel trois étapes et sauvegarde serveur, cadeau de 5 tirages distincts disponible après tutoriel, tirage serveur existant, CTA « Retour au Drop ».
 
-Après le tutoriel, chaque compte reçoit un cadeau unique de **cinq boosters**, réclamable séparément dans une boîte/carte cadeau ou le carnet, avec le message : « Malik a décidé de réinitialiser la progression de tout le monde pour implémenter le tutoriel et vous offre 5 boosters. » Le cadeau ne fait pas partie du tutoriel, ne se cumule pas dans la réserve normale et doit être tiré côté serveur par le moteur existant.
+- [x] Reset global one-shot : identifiants, profils, amis et historiques conclus conservés ; trades en attente annulés, annonces actives retirées, progression/réserves remises au départ ; cadeau préprovisionné pour chaque compte existant.
+- [x] Tests API/UI/SQL : ordre tutoriel puis cadeau, message exact, claim unique, cinq ouvertures de cinq cartes et absence de débit réserve/paiements ; données préservées et migration rejouée sans écraser progression ultérieure.
+- [x] Validations locales : `npm test` 71 fichiers/1 109 tests ; `npm run ecrans` 13 fichiers/73 tests ; typecheck, lint, build webpack, et `npm run supabase:verify` tous verts. Le build Turbopack standard ne fonctionne pas dans le Cloud restreint (port local refusé) ; `npm run build -- --webpack` réussit. Aucun téléphone réel ni E2E navigateur pour ce lot.
+- [x] Commit local sur `main` (`f97ea42`) ; pas de push, PR fusionnée ou branche supprimée.
+- [ ] Production interdite pour cette étape. Une application réelle nécessitera d'abord projet cible certain, schéma courant connu et sauvegarde récupérable ; aucun de ces contrôles de production n'a été exécuté.
 
-Le récapitulatif de révélation doit terminer par **« Retour au Drop »**. Ne pas offrir d’ouverture directe du booster suivant depuis cet écran ; le joueur peut revenir au Drop et ouvrir depuis l’accueil.
-
-- [ ] Tutoriel moderne de première partie ; état de fin fiable pour chaque compte/appareil.
-- [ ] Migration SQL additive, globale et idempotente : reset uniquement une fois à l’application, cadeau par compte, conservation et nettoyage selon le périmètre ci-dessus.
-- [ ] RPC serveur pour terminer le tutoriel, consulter/réclamer le cadeau et ouvrir les cinq boosters cadeau sans contourner les règles de tirage.
-- [ ] Régression du CTA post-ouverture, tests UI/API et fixture SQL couvrant données effacées, préservées, cadeau une fois et cinq ouvertures réelles.
-- [ ] Vérification sur Postgres jetable, suite projet, écrans, typecheck, lint, build et `catalog:ci` si pertinent ; documenter les résultats exacts.
-- [ ] Production : **non touchée**. Avant toute application, vérifier le projet Supabase réel, sa version de schéma, la sauvegarde et le plan de récupération. La demande utilisateur couvre le reset de tous, mais l’opération reste bloquée si la cible ou la sauvegarde ne peut pas être établie.
-
-Cette entrée est une demande planifiée, pas une preuve d’implémentation. Voir le prompt de reprise prêt à coller et les limites du checkout dans [la passation](agent-handoff.md).
+Résultats et limites exacts dans [la passation](agent-handoff.md), choix dans [les décisions](decisions.md), risque de procédure dans [les problèmes connus](known-issues.md).
 
 ## État courant après consolidation — 10 octobre 2026
 
