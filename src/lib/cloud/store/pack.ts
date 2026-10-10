@@ -12,6 +12,74 @@ import { sanitizeState } from "@/lib/save-store";
  */
 export function packActions(ctx: CloudStoreContext) {
   return {
+    async onboardingStatus() {
+      const api = ctx.resolve();
+      if (!api?.session()) return null;
+      return api.onboardingStatus();
+    },
+
+    async refreshOnboarding(): Promise<void> {
+      const api = ctx.resolve();
+      if (!api?.session()) { ctx.publish({ onboarding: null, onboardingBusy: false }); return; }
+      ctx.publish({ onboardingBusy: true });
+      try { ctx.publish({ onboarding: await api.onboardingStatus(), onboardingBusy: false }); }
+      catch { ctx.publish({ onboardingBusy: false }); }
+    },
+
+    async completeTutorial() {
+      const api = ctx.resolve();
+      if (!api?.session()) return false;
+      try { await api.completeTutorial(); await this.refreshOnboarding(); return true; }
+      catch (error) { ctx.fail(error, "Fin du tutoriel impossible à synchroniser."); return false; }
+    },
+
+    async claimReturnGift(): Promise<CloudActionOutcome> {
+      const api = ctx.resolve();
+      if (!api?.session()) return { status: "unavailable", reason: "no-session", message: "Connecte-toi pour réclamer ton cadeau." };
+      try {
+        await api.claimReturnGift();
+        await this.refreshOnboarding();
+        return { status: "done", message: "Cadeau réclamé : 5 boosters attendent dans ta boîte cadeau." };
+      } catch (error) { return ctx.cloudRefusal(error, "Cadeau indisponible."); }
+    },
+
+    async openReturnGiftPack(): Promise<PackOpenOutcome> {
+      const api = ctx.resolve();
+      if (!api?.session()) return { status: "unavailable", reason: "no-session", message: "Connecte-toi pour ouvrir le cadeau." };
+      try {
+        ctx.publish({ busy: true });
+        const result = await api.openReturnGiftPack();
+        await this.refreshOnboarding();
+        const local = ctx.deps.readState();
+        if (!local || result.cards.length !== 5) throw new CloudError("Le tirage cadeau est incomplet.", "invalid_response", 0);
+        const receivedCards = result.cards.map((card, index) => ({
+          id: `gift-${ctx.deps.now()}-${index}-${card.creatorSlug}`,
+          creatorSlug: card.creatorSlug,
+          rarity: card.rarity as "common"|"uncommon"|"rare"|"epic"|"legendary",
+          variant: card.variant as "standard"|"live"|"holo"|"gold",
+          obtainedAt: ctx.deps.now(),
+          rareDrop: card.rareDrop,
+          isNew: !local.cards.some((owned) => owned.creatorSlug === card.creatorSlug),
+        }));
+        const remoteSave = result.save;
+        const remote = remoteSave ? sanitizeState(remoteSave.state, ctx.deps.now()) : null;
+        if (remote && remoteSave) {
+          ctx.deps.applyState(remote);
+          ctx.publish({ busy: false, pending: false, decision: "noop", remoteUpdatedAt: Date.parse(remoteSave.updatedAt)||ctx.deps.now(), lastSyncAt: ctx.deps.now(), message: `Booster cadeau ouvert : encore ${result.giftRemaining}.`, isError: false });
+          return { status: "drawn", cards: receivedCards, streakReward: null };
+        }
+        const next = { ...local, updatedAt: ctx.deps.now(), cards: [...local.cards, ...receivedCards] };
+        ctx.deps.applyState(next);
+        await ctx.push(next.version, next.updatedAt, false);
+        ctx.publish({ busy: false, message: `Booster cadeau ouvert : encore ${result.giftRemaining}.`, isError: false });
+        return { status: "drawn", cards: receivedCards, streakReward: null };
+      } catch (error) {
+        const message = error instanceof CloudError ? error.message : "Ouverture du cadeau impossible.";
+        ctx.publish({ busy: false, message, isError: true });
+        return { status: "unavailable", reason: "error", message };
+      }
+    },
+
     /**
      * Ouvre un booster côté serveur : les cartes sont tirées par la fonction
      * `open_pack()` de Supabase, puis appliquées à la partie locale.

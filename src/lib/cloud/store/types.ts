@@ -169,6 +169,8 @@ export type CloudState = {
   inboxUnread: number;
   /** Un chargement du carnet est en cours. */
   inboxBusy: boolean;
+  onboarding: { tutorialCompleted: boolean; giftAvailable: boolean; giftRemaining: number; message: string } | null;
+  onboardingBusy: boolean;
   /**
    * L'étagère des Last Packs : les paquets encore exposés (les miens et ceux
    * de mes amis), tels que le serveur les donne. `null` = pas encore chargée
@@ -369,6 +371,8 @@ export const EMPTY_CLOUD_STATE: CloudState = Object.freeze({
   inboxAt: null,
   inboxUnread: 0,
   inboxBusy: false,
+  onboarding: null,
+  onboardingBusy: false,
   lastPacks: null,
   lastPacksAt: null,
   lastPacksBusy: false,

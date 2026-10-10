@@ -340,10 +340,58 @@ export function CreatorDeckApp() {
   useEffect(() => {
     if (!cloud.configured || !cloud.userId) return;
     void cloudStore.packStatus();
+    void cloudStore.refreshOnboarding();
     // Le solde aussi : depuis `0027_wallet.sql`, c'est le serveur qui tient la
     // caisse, et une sauvegarde bricolée est recollée à la vérité ici.
     void cloudStore.syncWallet();
   }, [cloud.configured, cloud.userId]);
+
+  const [tutorialStep, setTutorialStep] = useState<number | null>(null);
+  const [giftBusy, setGiftBusy] = useState(false);
+  const welcomeKey = `creatordeck-tutorial:${cloud.userId ?? "local"}`;
+  const [welcomeSeenKey, setWelcomeSeenKey] = useState<string | null>(() => {
+    try { return typeof window !== "undefined" && window.localStorage.getItem(welcomeKey) === "done" ? welcomeKey : `not-done:${welcomeKey}`; }
+    catch { return `not-done:${welcomeKey}`; }
+  });
+  const welcomeSeen = welcomeSeenKey === welcomeKey;
+  const tutorialCompletionKey = `creatordeck-tutorial:completed:${cloud.userId ?? "local"}`;
+  const [completedTutorialKey, setCompletedTutorialKey] = useState<string | null>(() => {
+    try { return typeof window !== "undefined" && window.localStorage.getItem(tutorialCompletionKey) === "done" ? tutorialCompletionKey : null; }
+    catch { return null; }
+  });
+  const completedTutorial = completedTutorialKey === tutorialCompletionKey;
+  const onboardingReady = !cloud.configured || Boolean(cloud.userId && cloud.onboarding && !cloud.onboardingBusy);
+  const showTutorial = tutorialStep !== null || (!welcomeSeen && (completedTutorialKey === null || completedTutorial) && onboardingReady && !cloud.onboarding?.tutorialCompleted && !completedTutorial);
+
+  async function finishWelcomeTutorial() {
+    if (cloud.configured && cloud.userId) {
+      const saved = await cloudStore.completeTutorial();
+      if (!saved) { showError("Impossible d’enregistrer la fin du tutoriel. Réessaie."); return; }
+    }
+    try { window.localStorage.setItem(welcomeKey, "done"); } catch { /* Le serveur conserve les comptes connectés. */ }
+    try { window.localStorage.setItem(tutorialCompletionKey, "done"); } catch { /* La fin n'est mémorisée que sur cet appareil. */ }
+    setTutorialStep(null);
+    setWelcomeSeenKey(welcomeKey);
+    setCompletedTutorialKey(tutorialCompletionKey);
+  }
+
+  async function claimAndOpenWelcomeGift() {
+    if (giftBusy) return;
+    setGiftBusy(true);
+    try {
+      const claim = await cloudStore.claimReturnGift();
+      if (claim.status !== "done") { showError(claim.message, claim.status === "unavailable" && claim.reason === "no-session" ? "account" : null); return; }
+      setNotice("Cadeau réclamé : 5 boosters distincts de ta réserve t’attendent.");
+      setTutorialStep(null);
+      setWelcomeSeenKey(welcomeKey);
+      const result = await cloudStore.openReturnGiftPack();
+      if (result.status !== "drawn") { showError(result.message); return; }
+      setRevealKind("live");
+      setDrawnCards(result.cards);
+      setStreakGain(null);
+      setRevealIndex(0);
+    } finally { setGiftBusy(false); }
+  }
 
   /**
    * Show the real booster from the first tap, while the server draws the cards.
@@ -559,6 +607,32 @@ export function CreatorDeckApp() {
 
   return (
     <main className="app-shell">
+      {showTutorial ? (
+        <div className="welcome-overlay" role="dialog" aria-modal="true" aria-label="Tutoriel CreatorDeck">
+          <section className="welcome-card">
+            <span className="welcome-eyebrow">CREATORDECK · PREMIERS PAS</span>
+            <span className="welcome-count">{(tutorialStep ?? 0) + 1} / 3</span>
+            <h1>{["Ouvre un booster", "Construis ton Binder", "Reviens au Drop"][tutorialStep ?? 0]}</h1>
+            <p>{[
+              "Déchire un booster pour découvrir cinq créateurs. La dernière carte garde son moment de révélation.",
+              "Chaque tirage rejoint ta collection. Les doublons peuvent ensuite servir à façonner ta collection.",
+              "Tes missions et tes amis t’attendent dans les autres espaces. Le cadeau de reprise arrive juste après ce tutoriel.",
+            ][tutorialStep ?? 0]}</p>
+            <div className="welcome-actions">
+              {(tutorialStep ?? 0) > 0 ? <button type="button" className="welcome-secondary" onClick={() => setTutorialStep((step) => Math.max(0, (step ?? 1) - 1))}>Retour</button> : null}
+              <button type="button" className="welcome-primary" onClick={() => (tutorialStep ?? 0) < 2 ? setTutorialStep((tutorialStep ?? 0) + 1) : void finishWelcomeTutorial()}>
+                {(tutorialStep ?? 0) < 2 ? "Continuer" : "Terminer"}
+              </button>
+            </div>
+          </section>
+        </div>
+      ) : null}
+      {welcomeSeen && cloud.userId && cloud.onboarding?.giftAvailable && !drawnCards.length ? (
+        <div className="welcome-gift-card" role="status">
+          <div><strong>Un cadeau t’attend</strong><p>{cloud.onboarding.message || "Malik a décidé de réinitialiser la progression de tout le monde pour implémenter le tutoriel et il vous offre 5 boosters."}</p></div>
+          <button type="button" disabled={giftBusy} onClick={() => void claimAndOpenWelcomeGift()}>{giftBusy ? "Préparation…" : `Réclamer mes 5 boosters · ${cloud.onboarding.giftRemaining} restants`}</button>
+        </div>
+      ) : null}
       <TopBar game={game} />
       <div className="app-content">
         {tab === "home" ? (
@@ -755,10 +829,6 @@ export function CreatorDeckApp() {
           onSkipAll={() => setRevealIndex(drawnCards.length - 1)}
           onNext={() => setRevealIndex((value) => Math.min(value + 1, drawnCards.length - 1))}
           onClose={closeReveal}
-          onReopen={game.player.packs > 0 ? () => {
-            closeReveal();
-            void handleOpenPack();
-          } : undefined}
         />
       ) : null}
     </main>

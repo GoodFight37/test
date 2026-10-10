@@ -100,6 +100,27 @@ describe("les écrans", () => {
     banc.fermer();
   });
 
+  it("présente le tutoriel court avant l'accueil et affiche le cadeau distinct ensuite", async () => {
+    window.localStorage.setItem("creatordeck-tutorial:local", "done");
+    await application();
+    await act(async () => { await vi.advanceTimersByTimeAsync(1); });
+    expect(document.body.textContent).not.toContain("CREATORDECK · PREMIERS PAS");
+    banc.vider();
+    window.localStorage.clear();
+    await application();
+    await act(async () => { await vi.advanceTimersByTimeAsync(1); });
+    expect(document.body.textContent).toContain("CREATORDECK · PREMIERS PAS");
+    expect(document.body.textContent).toContain("1 / 3");
+    banc.appuyer("Continuer");
+    expect(document.body.textContent).toContain("Construis ton Binder");
+    banc.appuyer("Continuer");
+    expect(document.body.textContent).toContain("Reviens au Drop");
+    banc.appuyer("Terminer");
+    expect(document.body.textContent).not.toContain("Un cadeau t’attend");
+    expect(window.localStorage.getItem("creatordeck-tutorial:local")).toBe("done");
+    expect(window.localStorage.getItem("creatordeck-tutorial:completed:local")).toBe("done");
+  });
+
   it("tire un booster et montre la révélation", async () => {
     await application();
     banc.appuyer("Ouvrir le booster");

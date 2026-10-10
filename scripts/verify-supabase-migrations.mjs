@@ -169,6 +169,7 @@ try {
   const collab = await readFile(path.join(MIGRATIONS, "0041_collab_plateau.sql"), "utf8");
   const tribunal = await readFile(path.join(MIGRATIONS, "0042_tribunal.sql"), "utf8");
   const sceneCompatibility = await readFile(path.join(MIGRATIONS, "0043_scene_pack_eligibilite.sql"), "utf8");
+  const tutorielReset = await readFile(path.join(MIGRATIONS, "0044_tutoriel_reset_cadeau.sql"), "utf8");
   const gardes = await readFile(path.join(MIGRATIONS, "0037_gardes.sql"), "utf8");
   const migrations = [
     ["0001_comptes_cloud.sql", await readFile(path.join(MIGRATIONS, "0001_comptes_cloud.sql"), "utf8")],
@@ -214,6 +215,7 @@ try {
     ["0041_collab_plateau.sql", collab],
     ["0042_tribunal.sql", tribunal],
     ["0043_scene_pack_eligibilite.sql", sceneCompatibility],
+    ["0044_tutoriel_reset_cadeau.sql", tutorielReset],
   ];
   // Droits de table façon Supabase, posés **avant** les migrations.
   //
@@ -230,8 +232,66 @@ try {
   `);
 
   for (const [name, sql] of migrations) {
-    await client.query(sql);
+    if (name !== "0044_tutoriel_reset_cadeau.sql") await client.query(sql);
   }
+
+  // Prépare trois comptes avec progression et données sociales avant le reset,
+  // puis exécute la migration réelle au moment où un déploiement la rencontrerait.
+  const RESET_A = "f4444444-4444-4444-8444-444444444444";
+  const RESET_B = "f5555555-5555-4555-8555-555555555555";
+  const RESET_C = "f6666666-6666-4666-8666-666666666666";
+  await client.query("insert into auth.users (id) values ($1),($2),($3)", [RESET_A, RESET_B, RESET_C]);
+  await client.query("insert into public.profiles(user_id,display_name) values ($1,'Malik Reset A'),($2,'Reset B'),($3,'Reset C')", [RESET_A, RESET_B, RESET_C]);
+  const seedResetSave = async (userId) => {
+    const ms = Date.now();
+    const state = { version: 9, playerId: userId, createdAt: ms, updatedAt: ms, level: 8, xp: 999, points: 800, hourglasses: 0, packs: 0, lastPackRegen: ms, openings: 17, cards: [{ id: "reset-card", creatorSlug: "ibai", rarity: "rare", variant: "standard", obtainedAt: ms }], claimedTiers: { "1": true }, claimedMilestones: ["first"], themeId: "gold", tokens: 90, streamer: { subscribers: 10, lastSeenAt: ms, tokensDay: "", tokensToday: 0, video: null, event: null, setup: [], guests: [], raid: null }, pityCounter: 8, missionDay: "2026-10-10", missions: {}, streakDay: "2026-10-10", streak: 6, streakJackpot: true, sceneDay: "2026-10-10", tribunal: { day: "2026-10-10", verdicts: {}, claimed: true } };
+    await client.query("insert into public.saves(user_id,state,save_version,device_updated_at,state_checksum,updated_at) values($1,$2::jsonb,9,$3,md5($2::text),now())", [userId, JSON.stringify(state), ms]);
+    await client.query("insert into public.wallets(user_id,points) values($1,800)", [userId]);
+    await client.query("insert into public.tokens(user_id,tokens) values($1,90)", [userId]);
+    await client.query("update public.stats set level=8,points=800,unique_creators=1,total_cards=1 where user_id=$1", [userId]);
+    if (userId !== RESET_B) await client.query("insert into public.trades(proposer_id,recipient_id,status,proposer_cards,recipient_cards) values($1,$2,'open','[{\"slug\":\"ibai\"}]','[{\"slug\":\"ibai\"}]')", [userId, RESET_B]);
+    if (userId === RESET_A) await client.query("insert into public.trades(proposer_id,recipient_id,status,proposer_cards,recipient_cards) values($2,$1,'accepted','[{\"slug\":\"ibai\"}]','[{\"slug\":\"ibai\"}]')", [userId, RESET_B]);
+    await client.query("insert into public.market_listings(seller_id,card_id,creator_slug,rarity,variant,payout,price,status) values($1,'reset-open','ibai','rare','standard',100,150,'open'),($1,'reset-sold','ibai','rare','standard',100,150,'sold')", [userId]);
+    if (userId !== RESET_B) await client.query("insert into public.friends(user1_id,user2_id) values($1,$2) on conflict do nothing", [userId, RESET_B]);
+  };
+  await seedResetSave(RESET_A);
+  await seedResetSave(RESET_B);
+  await seedResetSave(RESET_C);
+  await client.query(tutorielReset);
+  const resetProof = await client.query(`
+    select
+      (select count(*)::int from public.return_gifts where user_id=any($1::uuid[]) and boosters_remaining=5) gifts,
+      (select count(*)::int from public.trades where proposer_id=$2 and status='cancelled') cancelled,
+      (select count(*)::int from public.trades where recipient_id=$2 and status='accepted') completed_trades,
+      (select count(*)::int from public.market_listings where seller_id=$2 and status='open') active_listings,
+      (select count(*)::int from public.market_listings where seller_id=$2 and status='sold') sold_listings,
+      (select count(*)::int from public.friends where user1_id=$2 or user2_id=$2) friends,
+      (select state->>'playerId' from public.saves where user_id=$2) player_id,
+      (select state->>'level' from public.saves where user_id=$2) level,
+      (select state->>'packs' from public.saves where user_id=$2) packs,
+      (select points from public.wallets where user_id=$2) points,
+      (select tokens from public.tokens where user_id=$2) tokens`, [[RESET_A, RESET_B, RESET_C], RESET_A]);
+  const proof = resetProof.rows[0];
+  check("reset global : cadeau 5 par compte, trades pendants annulés, historiques terminés préservés", proof.gifts === 3 && proof.cancelled === 1 && proof.completed_trades === 1 && proof.sold_listings === 1 && proof.active_listings === 0 && proof.friends === 1 && proof.player_id === RESET_A && proof.level === "1" && proof.packs === "2" && proof.points === 40 && proof.tokens === 0, JSON.stringify(proof));
+  await client.query("select set_config('test.uid',$1,false)", [RESET_A]);
+  const beforeTutorial = (await client.query("select public.onboarding_status() as r")).rows[0].r;
+  check("cadeau : indisponible avant la fin du tutoriel", beforeTutorial.tutorial_completed === false && beforeTutorial.gift_available === false && beforeTutorial.gift_remaining === 5);
+  await refuses("cadeau : impossible de réclamer avant le tutoriel", RESET_A, "select public.claim_return_gift()", [], "termine le tutoriel");
+  const completedTutorial = (await asPlayer(RESET_A, "select public.complete_tutorial() as r")).rows[0].r;
+  check("tutoriel : fin unique active le cadeau ensuite", completedTutorial.tutorial_completed === true && completedTutorial.gift_available === true && completedTutorial.gift_remaining === 5);
+  const claimGift = (await asPlayer(RESET_A, "select public.claim_return_gift() as r")).rows[0].r;
+  check("cadeau : claim unique renvoie le message demandé", claimGift.claimed === true && claimGift.boosters_remaining === 5 && claimGift.message === "Malik a décidé de réinitialiser la progression de tout le monde pour implémenter le tutoriel et il vous offre 5 boosters.");
+  await refuses("cadeau : deuxième claim refusé", RESET_A, "select public.claim_return_gift()", [], "déjà réclamé");
+  const giftPacks = [];
+  for (let i = 0; i < 5; i += 1) giftPacks.push((await asPlayer(RESET_A, "select public.open_return_gift_pack() as r")).rows[0].r);
+  check("cadeau : cinq boosters séparés ouvrent cinq fois cinq cartes", giftPacks.every((pack) => pack.cards.length === 5) && giftPacks.at(-1)?.gift_remaining === 0 && (await client.query("select count(*)::int n from public.return_gift_draws where user_id=$1", [RESET_A])).rows[0].n === 5);
+  const giftSavedProgress = (await client.query("select state->>'openings' openings,state->>'packs' packs from public.saves where user_id=$1", [RESET_A])).rows[0];
+  check("cadeau : réserve sauvegardée conservée sans création de pack_state ni paiement", (await client.query("select count(*)::int n from public.pack_state where user_id=$1", [RESET_A])).rows[0].n === 0 && (await client.query("select count(*)::int n from public.wallet_ledger where user_id=$1 and kind='pack'", [RESET_A])).rows[0].n === 0 && giftSavedProgress.openings === "0" && giftSavedProgress.packs === "2");
+  await refuses("cadeau : sixième ouverture refusée", RESET_A, "select public.open_return_gift_pack()", [], "réclame le cadeau disponible");
+  await client.query("select set_config('test.uid','',false)");
+  await client.query("update public.saves set state=jsonb_set(state,'{xp}','12345') where user_id=$1", [RESET_A]);
+  await client.query(tutorielReset);
+  check("reset global : migration idempotente et progression postérieure intacte", (await client.query("select state->>'xp' xp from public.saves where user_id=$1", [RESET_A])).rows[0].xp === "12345");
   console.log(`→ migrations ${migrations.map(([name]) => name.slice(0, 4)).join(", ")} exécutées\n`);
 
   const USER = "11111111-1111-4111-8111-111111111111";
@@ -582,7 +642,7 @@ try {
   );
   check(
     "recherche : je ne me trouve pas moi-même",
-    (await asPlayer(A, "select public.search_players('ali') as r")).rows[0].r.length === 0,
+    (await asPlayer(A, "select public.search_players('alix') as r")).rows[0].r.length === 0,
   );
   check(
     "recherche : moins de deux caractères ne renvoie rien",
@@ -2085,7 +2145,7 @@ try {
   check(
     "amis : l'acceptation crée une amitié unique",
     amitie.request?.status === "accepted" && amitie.friendship !== null &&
-      (await client.query("select count(*)::int as n from public.friends")).rows[0].n === 1,
+      (await client.query("select count(*)::int as n from public.friends where (user1_id=$1 and user2_id=$2) or (user1_id=$2 and user2_id=$1)", [A, B])).rows[0].n === 1,
   );
   check(
     "amis : l'amitié se voit des deux côtés, dans les deux sens",
@@ -2145,7 +2205,7 @@ try {
     "amis : retirer un ami efface le lien, des deux côtés",
     (await asPlayer(A, "select public.list_friends() as r")).rows[0].r.length === 0 &&
       (await asPlayer(B, "select public.list_friends() as r")).rows[0].r.length === 0 &&
-      (await client.query("select count(*)::int as n from public.friends")).rows[0].n === 0,
+      (await client.query("select count(*)::int as n from public.friends where (user1_id=$1 and user2_id=$2) or (user1_id=$2 and user2_id=$1)", [A, B])).rows[0].n === 0,
   );
 
   // Un tiers ne voit rien : ni les demandes, ni les amitiés des autres.
@@ -7198,7 +7258,7 @@ try {
     "migrations rejouables : le Last Pack répond encore, sans double publication",
     (await asPlayer(L2, "select public.last_pack_shelf() as r")).rows[0].r.packs.length === 0 &&
       (await client.query("select count(*)::int as n from public.last_packs")).rows[0].n ===
-        (await client.query("select count(*)::int as n from public.pack_draws")).rows[0].n,
+        (await client.query("select count(*)::int as n from public.pack_draws where kind <> 'gift'")).rows[0].n,
 
   );
 

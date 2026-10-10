@@ -93,6 +93,11 @@ export type CloudStoreActions = {
   tribunalRecompense: ReturnType<typeof walletActions>["tribunalRecompense"];
   redeemPromoCode: ReturnType<typeof packActions>["redeemPromoCode"];
   resetProgress: ReturnType<typeof packActions>["resetProgress"];
+  onboardingStatus: ReturnType<typeof packActions>["onboardingStatus"];
+  refreshOnboarding: ReturnType<typeof packActions>["refreshOnboarding"];
+  completeTutorial: ReturnType<typeof packActions>["completeTutorial"];
+  claimReturnGift: ReturnType<typeof packActions>["claimReturnGift"];
+  openReturnGiftPack: ReturnType<typeof packActions>["openReturnGiftPack"];
   searchPlayers: ReturnType<typeof socialActions>["searchPlayers"];
   playerVariants: ReturnType<typeof socialActions>["playerVariants"];
   loadTrades: ReturnType<typeof socialActions>["loadTrades"];

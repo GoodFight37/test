@@ -176,13 +176,12 @@ describe("les effets de révélation", () => {
      */
     const suivant = vi.fn();
     const fermer = vi.fn();
-    const rouvrir = vi.fn();
     const cinq = [carte("epic", "a"), carte("epic", "b"), carte("epic", "c"), carte("epic", "d"), carte("epic", "e")];
     cinq[0]!.rareDrop = true;
     cinq[2]!.isNew = true;
     const { RevealOverlay } = await import("@/components/reveal-overlay");
     await banc.monter(
-      <RevealOverlay cards={cinq as never} index={0} onNext={suivant} onClose={fermer} onReopen={rouvrir} />,
+      <RevealOverlay cards={cinq as never} index={0} onNext={suivant} onClose={fermer} />,
     );
 
     const bouton = () => document.querySelector<HTMLButtonElement>(".reveal-next")!;
@@ -205,10 +204,9 @@ describe("les effets de révélation", () => {
     expect(fermer, "le récapitulatif ferme trop tôt").not.toHaveBeenCalled();
     expect(document.body.textContent).toContain("1 nouvelle");
     expect(document.querySelectorAll(".reveal-summary-card")).toHaveLength(5);
-    expect(bouton().textContent).toContain("Rouvrir un booster");
-    banc.appuyer("Rouvrir un booster");
-    expect(rouvrir, "la boucle d'ouverture ne repart pas").toHaveBeenCalledTimes(1);
-    expect(fermer, "la réouverture ferme au lieu de repartir").not.toHaveBeenCalled();
+    expect(bouton().textContent).toContain("Retour au Drop");
+    banc.appuyer("Retour au Drop");
+    expect(fermer).toHaveBeenCalledTimes(1);
     expect(suivant, "le Perfect repart en arrière").not.toHaveBeenCalled();
   });
 

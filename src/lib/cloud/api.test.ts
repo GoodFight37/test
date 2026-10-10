@@ -668,6 +668,16 @@ describe("tirage serveur", () => {
     expect(result.cards[0]).toMatchObject({ creatorSlug: "kaicenat", rarity: "legendary", variant: "live" });
   });
 
+  it("suit le statut onboarding, termine le tutoriel puis réclame et tire les 5 cadeaux via RPC dédiées", async () => {
+    const { api, calls } = client(() => ({ body: { tutorial_completed: true, gift_available: true, gift_remaining: 5, cards: Array.from({ length: 5 }, (_, i) => ({ creatorSlug: ["kaicenat", "ibai", "ninja", "auronplay", "rubius"][i], rarity: "rare", variant: "standard", rareDrop: false })), save: null } }), signedIn());
+    await expect(api.onboardingStatus()).resolves.toMatchObject({ tutorialCompleted: true, giftAvailable: true, giftRemaining: 5 });
+    await api.completeTutorial();
+    await api.claimReturnGift();
+    const gift = await api.openReturnGiftPack();
+    expect(gift.cards).toHaveLength(5);
+    expect(calls.map((call) => call.url.split("/").at(-1))).toEqual(["onboarding_status", "complete_tutorial", "claim_return_gift", "open_return_gift_pack"]);
+  });
+
   it("refuse sans session", async () => {
     const { api } = client(() => ({ body: {} }));
     await expect(api.openPack()).rejects.toThrowError(/Connecte-toi/);

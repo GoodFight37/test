@@ -47,7 +47,6 @@ export function RevealOverlay({
   onSkipAll,
   onNext,
   onClose,
-  onReopen,
   returnFocusTo,
 }: {
   cards: DrawnCard[];
@@ -70,8 +69,6 @@ export function RevealOverlay({
   onSkipAll?: () => void;
   onNext: () => void;
   onClose: () => void;
-  /** Rejouer un booster après le récapitulatif, si la réserve le permet. */
-  onReopen?: () => void;
   returnFocusTo?: HTMLElement | null;
 }) {
   const dialogRef = usePresentationFocus(!overlay, returnFocusTo);
@@ -382,7 +379,7 @@ export function RevealOverlay({
 
       <button
         className={`reveal-next${locked ? " locked" : ""}`}
-        onClick={showSummary ? (onReopen ?? onClose) : advance}
+        onClick={showSummary ? onClose : advance}
         disabled={locked}
         // La barre du verrou lit la durée du module de mise en scène : une
         // seule vérité, sinon elle finirait avant le bouton ou après lui.
@@ -390,7 +387,7 @@ export function RevealOverlay({
       >
         <span>
           {showSummary
-            ? onReopen ? "Rouvrir un booster" : "Retour au Drop"
+            ? "Retour au Drop"
             : locked
             ? "Perfect…"
             : termine
