@@ -1,6 +1,6 @@
 # Mises à jour automatiques Supabase
 
-Le workflow **Mise à jour Supabase** attend la réussite du workflow
+Pour appliquer des migrations, le workflow **Mise à jour Supabase** attend la réussite du workflow
 **Vérification** sur le commit courant de `main`. Il applique les nouvelles
 migrations avec le CLI officiel Supabase, puis ce CLI enregistre leur version.
 Il ne déploie ni APK, ni fonction Edge, ni site Vercel. La publication Vercel
@@ -50,7 +50,7 @@ connexion : cela ne prouve pas qu'il est activé.
    **New repository secret** → nom `SUPABASE_DB_URL` → URI complète → enregistrer.
    Il s'agit d'un accès administrateur PostgreSQL, réservé au workflow de
    production ; les jobs des PR ne reçoivent aucun secret.
-4. Après CI verte du commit courant, Actions → **Mise à jour Supabase** →
+4. Pour le diagnostic seul, sans attendre la CI complète : Actions → **Mise à jour Supabase** →
    **Run workflow** sur `main`, garder **dry_run cochée** et **approve_manual
    décochée**. Cela teste réellement la connexion même sans nouvelle migration.
    Vérifier le message « Connexion TLS, projet CreatorDeck et historique vérifiés ».
@@ -112,3 +112,9 @@ Aucune modification produit/SQL de jeu ; les suites UI/build/SQL de jeu ne sont
 pas relancées pour ces fichiers de déploiement. Derniers résultats produit dans
 la passation. Aucune exécution GitHub Actions/CLI réelle ni activation du secret
 constatée pendant cette préparation.
+
+## Échec de connexion : diagnostic précis
+
+Le contrôle manuel dry_run sur main courant ne nécessite pas la CI verte et n’installe pas le CLI Supabase. Il ne modifie ni données ni historique. Créer un **nouveau** Run workflow pour utiliser le correctif ; Re-run d’un ancien run utilise sa révision ancienne.
+
+Un message « Mot de passe PostgreSQL refusé (28P01) » établit un refus d’authentification ; ENOTFOUND concerne l’adresse/DNS, ENETUNREACH le réseau, et SELF_SIGNED_CERT_IN_CHAIN la confiance TLS. Un refus « projet ou utilisateur introuvable » vient du pooler. Ces messages fixes ne contiennent aucune URL ni mot de passe. Ne pas changer le secret au hasard et ne jamais désactiver la vérification TLS. Le log générique ancien ne prouve aucune de ces causes.

@@ -1,3 +1,7 @@
+## Diagnostic connexion Supabase — 11 octobre 2026
+
+Erreur réelle encore inconnue : ancien script masquait tous les codes PostgreSQL. Diagnostic sûr par cause ajouté ; contrôle manuel dry_run indépendant de la CI complète, aucune migration dans ce mode. Application réelle toujours bloquée sans CI verte. Connexion réelle reste à vérifier avec le nouveau workflow ; aucune nouvelle configuration de mot de passe demandée. Test navigateur cadeau suspendu, inachevé et non publié.
+
 ## CI navigateur après tutoriel — 11 octobre 2026
 
 Échec du scénario cloud expliqué : mock onboarding incomplet et scénario ancien supposant le tutoriel terminé. Tests adaptés, sans modification produit/SQL. Suite locale 36 réussis/2 cloud ignorés, code 0 ; scénario cloud vérifié séparément, typecheck/lint réussis. Publication/CI distante à confirmer. L’automatisation Supabase attend la CI verte et le contrôle réel dry_run, pas une nouvelle configuration du secret.

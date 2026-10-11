@@ -1,3 +1,7 @@
+## 11 octobre 2026 — Diagnostic de connexion Supabase
+
+Messages de connexion PostgreSQL classés sans secrets ; dry_run manuel en lecture seule sans attente de CI et sans installation du CLI. CI complète toujours obligatoire pour les migrations. Aucun SQL production appliqué ; cause réelle du précédent échec encore inconnue. Voir la passation pour validations et publication. Test navigateur cadeau commencé auparavant conservé hors livraison, suspendu à la demande de Malik.
+
 # Historique des livraisons
 
 > **Le passé du projet, daté, du plus récent au plus ancien.** Ce tableau vivait

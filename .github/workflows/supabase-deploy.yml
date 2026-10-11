@@ -50,7 +50,9 @@ jobs:
             }
             const runs = await github.rest.actions.listWorkflowRuns({ owner, repo, workflow_id: 'verification.yml', head_sha: sha, per_page: 100 });
             const trusted = runs.data.workflow_runs.find(r => r.head_repository.full_name === `${owner}/${repo}` && r.head_branch === 'main' && ['push', 'workflow_dispatch'].includes(r.event) && r.status === 'completed' && r.conclusion === 'success');
-            if (!trusted) throw new Error('La vérification complète de cette révision doit réussir avant les migrations.');
+            const readOnly = context.eventName === 'workflow_dispatch' && context.payload.inputs?.dry_run === 'true';
+            if (!trusted && !readOnly) throw new Error('La vérification complète de cette révision doit réussir avant les migrations.');
+            if (readOnly) core.notice('Diagnostic en lecture seule : aucune migration, sans attendre la CI complète.');
             core.setOutput('sha', sha);
             core.setOutput('ready', 'true');
       - uses: actions/checkout@v4
@@ -63,7 +65,7 @@ jobs:
         with:
           node-version: 22
       - uses: supabase/setup-cli@v1
-        if: steps.revision.outputs.ready == 'true'
+        if: steps.revision.outputs.ready == 'true' && !(github.event_name == 'workflow_dispatch' && inputs.dry_run)
         with:
           version: 2.39.2
       - name: Installer le pilote PostgreSQL isolé

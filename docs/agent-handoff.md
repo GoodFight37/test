@@ -1,3 +1,13 @@
+## Checkpoint courant — diagnostic connexion Supabase — 11 octobre 2026
+
+- Reprise main local/distant `713aea4df6b888a3c2730569698da0ff97cca24d`, vérifié via git ls-remote. Fichier préexistant non suivi `e2e/onboarding-gift.spec.ts` conservé, inachevé, hors commit ; chantier explicitement suspendu par Malik. Aucun autre fichier préexistant modifié.
+- Malik confirme mot de passe de base changé (sans caractères spéciaux), secret GitHub mis à jour, puis dry_run échoué avec « Connexion PostgreSQL impossible ; vérifier le secret et l’accès réseau du runner. » Ne pas lui demander de refaire la même configuration sans cause nouvelle.
+- Défaut prouvé du script : toutes les erreurs avec `error.code` étaient masquées sous ce texte, empêchant de distinguer mot de passe, TLS, DNS, réseau ou pooler. Ajout de messages fixes classés, sans erreur brute ni paramètre de connexion. Cause réelle du run précédent encore inconnue, car son code a été supprimé du log.
+- Diagnostic manuel dry_run sur main courant peut maintenant s’exécuter sans attendre CI et sans CLI Supabase. Il effectue uniquement les lectures de schéma/historique existantes. Les migrations restent derrière CI complète verte ; aucun reset, repair ou SQL produit nouveau.
+- Vérifications : `node scripts/supabase-deploy.test.mjs` **17/17**, code 0 avec exécution autorisée (premier run sandbox 16/17 : sous-processus masqué) ; `npx eslint scripts/supabase-deploy.mjs scripts/supabase-deploy.test.mjs`, `node scripts/supabase-deploy.mjs --check`, parsing `yaml.safe_load` du workflow et `git diff --check` : code 0. Aucun build/UI/SQL de jeu relancé : produit inchangé. Aucun accès PostgreSQL production effectué par cette session. Correctif destiné à main ; publication et SHA vérifiables dans Git.
+- Environnement Cloud : aucun secret configuré, TCP sans domaine/IP autorisé, politique HTTP état unknown. API Actions : gh run list renvoie Forbidden ; Git HTTPS fonctionne. Ne pas confondre le réseau Cloud avec celui du runner GitHub.
+- Prochaine action après publication : [workflow précis](https://github.com/GoodFight37/CreatorDeck/actions/workflows/supabase-deploy.yml) → Run workflow → main, dry_run cochée, approve_manual décochée. Utiliser un nouveau run (Re-run d’un ancien garde son ancien script). Le résultat précis permettra de choisir une correction sans deviner le mot de passe.
+
 ## Checkpoint courant — CI navigateur après tutoriel — 11 octobre 2026
 
 - Reprise `main` local/distant `15b0693ff45e2c923a889f8ead658b0e672f8956`, checkout propre. Malik fournit l'échec CI navigateur-cloud : deux scénarios bureau/téléphone échouent (et retries) au clic sur Ouvrir le booster ; la fenêtre Tutoriel CreatorDeck intercepte les événements.

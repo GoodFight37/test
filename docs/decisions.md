@@ -229,3 +229,9 @@ dans la passation ; la correction de schéma n'est pas encore appliquée.
 | D-024 / 2026-10-11 | Automatiser les nouvelles migrations via GitHub Actions après CI verte sur main, avec CLI officiel Supabase | Demande explicite utilisateur. Secret PostgreSQL réservé au workflow, cible projet/TLS/historique vérifiés, anciennes migrations figées et jamais rejouées. Mode automatic déclaré après revue ; défaut absent refusé et mode manual nécessite lancement explicite. Historique SQL Editor à réconcilier seulement après preuves, aucun repair automatique. 14 tests locaux ; activation et accès réel non validés. Vercel indépendant et publication client doit rester compatible. |
 
 | D-025 / 2026-10-11 | Les tests navigation/tirage commencent avec un joueur ayant terminé le tutoriel | Corriger la fixture après ajout du tutoriel, sans clic forcé ni suppression du tutoriel produit. RPC onboarding simulé renvoie un état valide ; assertions de cartes serveur, absence de push et persistance inchangées. Scénarios tutoriel séparés dans les tests d'écran. |
+
+## D-026 — 11 octobre 2026 : diagnostic PostgreSQL sûr et rapide
+
+Le log fourni après changement du mot de passe reste générique, car le script efface tous les codes du pilote. Classer les erreurs de connexion par messages fixes (authentification, DNS, TCP, TLS, pooler, timeout), jamais par impression de message/detail brut. Tests de non-divulgation et erreurs agrégées. La cause production ne peut pas être déduite rétroactivement du message masqué.
+
+Le dry_run manuel sur main courant fait uniquement les lectures existantes et peut donc précéder la CI complète ; le CLI de migration n’est pas installé dans ce mode. Déploiement automatique et validation manual restent conditionnés à une CI verte et à la bonne révision. Choix motivé par les attentes inutiles du propriétaire ; pas de désactivation TLS, de migration, de changement de secret ni de politique réseau.

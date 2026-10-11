@@ -5,6 +5,40 @@ import { pathToFileURL } from "node:url";
 import { spawnSync } from "node:child_process";
 
 export const PROJECT = "yzxchpybqrfegvecihxf";
+/** Messages fixes : ne jamais journaliser les paramètres du pilote PostgreSQL. */
+export function connectionFailure(error) {
+  const reasons = {
+    '28P01': 'Mot de passe PostgreSQL refusé (28P01). Vérifier le mot de passe de base enregistré dans SUPABASE_DB_URL.',
+    '28000': 'Authentification PostgreSQL refusée (28000). Vérifier l’utilisateur et le projet dans la connexion Supabase.',
+    ENOTFOUND: 'Hôte PostgreSQL introuvable (ENOTFOUND). Vérifier l’adresse copiée depuis Connect → Session pooler.',
+    EAI_AGAIN: 'Résolution DNS temporairement indisponible (EAI_AGAIN).',
+    ECONNREFUSED: 'Connexion TCP refusée (ECONNREFUSED). Vérifier le pooler, son port et l’état du projet.',
+    ENETUNREACH: 'Réseau PostgreSQL inaccessible (ENETUNREACH). Avec une connexion directe IPv6, utiliser le Session pooler IPv4.',
+    EHOSTUNREACH: 'Serveur PostgreSQL inaccessible (EHOSTUNREACH). Vérifier les restrictions réseau du projet.',
+    ETIMEDOUT: 'Connexion PostgreSQL expirée (ETIMEDOUT). Vérifier les restrictions réseau du projet et l’état du pooler.',
+    ECONNRESET: 'Connexion interrompue par le serveur (ECONNRESET).',
+    SELF_SIGNED_CERT_IN_CHAIN: 'Certificat TLS non reconnu (SELF_SIGNED_CERT_IN_CHAIN). Vérifier la chaîne de certificats Supabase ; ne pas désactiver TLS.',
+    DEPTH_ZERO_SELF_SIGNED_CERT: 'Certificat TLS autosigné (DEPTH_ZERO_SELF_SIGNED_CERT). Vérifier le certificat de la base ; ne pas désactiver TLS.',
+    UNABLE_TO_VERIFY_LEAF_SIGNATURE: 'Chaîne de certificats TLS incomplète (UNABLE_TO_VERIFY_LEAF_SIGNATURE).',
+    UNABLE_TO_GET_ISSUER_CERT_LOCALLY: 'Autorité du certificat TLS absente (UNABLE_TO_GET_ISSUER_CERT_LOCALLY).',
+    CERT_HAS_EXPIRED: 'Certificat TLS expiré (CERT_HAS_EXPIRED).',
+    ERR_TLS_CERT_ALTNAME_INVALID: 'Certificat TLS incompatible avec l’hôte (ERR_TLS_CERT_ALTNAME_INVALID).',
+    '53300': 'Nombre maximal de connexions PostgreSQL atteint (53300).',
+    '57P03': 'PostgreSQL temporairement indisponible (57P03).',
+  };
+  if (Object.hasOwn(reasons, error?.code)) return reasons[error.code];
+  // Le pooler peut émettre ce refus sans code SQLSTATE exploitable.
+  if (/tenant or user not found/i.test(String(error?.message ?? ''))) {
+    return 'Pooler Supabase : projet ou utilisateur introuvable. Recopier l’hôte et l’utilisateur depuis Connect → Session pooler du projet CreatorDeck.';
+  }
+  if (/timeout|timed out/i.test(String(error?.message ?? ''))) {
+    return 'Délai de connexion PostgreSQL dépassé. Vérifier les restrictions réseau du projet et l’état du pooler.';
+  }
+  if (Array.isArray(error?.errors) && error.errors.length) {
+    return [...new Set(error.errors.map(connectionFailure))].join(' ');
+  }
+  return 'Connexion PostgreSQL impossible : cause non reconnue. Aucun paramètre de connexion affiché.';
+}
 export function checkTarget(value) {
   let url;
   try { url = new URL(value); } catch { throw new Error("SUPABASE_DB_URL doit être une URL PostgreSQL."); }
@@ -69,7 +103,8 @@ async function main() {
   });
   let pending;
   try {
-    await client.connect();
+    try { await client.connect(); }
+    catch (error) { throw new Error(connectionFailure(error)); }
     // Lecture seule : aucun repair/baseline automatique.
     const tables = await client.query("select to_regclass('supabase_migrations.schema_migrations') history, to_regclass('public.onboarding_state') tutorial, to_regclass('public.return_gifts') gift");
     if (!tables.rows[0].history || !tables.rows[0].tutorial || !tables.rows[0].gift) throw new Error('Schéma cible incomplet : aucune migration exécutée.');
