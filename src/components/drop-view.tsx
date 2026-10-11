@@ -9,16 +9,20 @@
  */
 import { useMemo, useRef, useState, type CSSProperties, type MouseEvent, type PointerEvent } from "react";
 import Image from "next/image";
-import { ArrowUp, ChevronRight, CircleUserRound, Clock3, Coins, Gavel, Gem, Hourglass, Layers3, LoaderCircle, ShieldCheck, Swords, Trophy, Users, Zap } from "lucide-react";
+import { createPortal } from "react-dom";
+import { ArrowUp, ChevronRight, CircleUserRound, Clock3, Coins, Gavel, Gem, Hourglass, Layers3, LoaderCircle, ShieldCheck, Swords, Users, Zap } from "lucide-react";
 
 import { CreatorCard } from "@/components/creator-card";
+import { CardInspectModal } from "@/components/card-inspect-modal";
+import { useBackHandler } from "@/hooks/use-back-handler";
+import { usePresentationFocus } from "@/hooks/use-presentation-focus";
 
 import { useCloud } from "@/hooks/use-cloud";
 
 import { useNow } from "@/hooks/use-game";
 
 import { useLive } from "@/hooks/use-live";
-import { CATALOG_SIZE, CREATORS, CREATOR_BY_SLUG, PACKS } from "@/lib/catalog";
+import { CATALOG_EDITION_NUMBER, CATALOG_SIZE, CREATOR_BY_SLUG, PACKS } from "@/lib/catalog";
 
 import { formatViewers, liveFor } from "@/lib/live";
 
@@ -75,6 +79,7 @@ export function HomeView({
   game,
   friendsOpening,
   onShowInbox,
+  onShowCollection,
   onOpen,
   onUseHourglass,
   onShowOdds,
@@ -97,6 +102,7 @@ export function HomeView({
   friendsOpening: number;
   /** La ligne des amis ouvre le carnet, qui porte les ouvertures en détail. */
   onShowInbox: () => void;
+  onShowCollection: () => void;
   onOpen: () => void;
   onOpenScene: () => void;
   sceneBusy: boolean;
@@ -233,6 +239,10 @@ export function HomeView({
   // La série se dit sur la même ligne : les deux récompenses attendent au même
   // endroit, le prochain booster.
   const packCopy = game.streak.jackpot ? `${pityCopy} · Perfect du 7ᵉ jour garanti` : pityCopy;
+  const [inspectCard, setInspectCard] = useState<GameView["cards"][number] | null>(null);
+  useBackHandler(inspectCard !== null, () => setInspectCard(null));
+  const findingFocus = usePresentationFocus(inspectCard !== null);
+  const inspectedCreator = inspectCard ? CREATOR_BY_SLUG.get(inspectCard.creatorSlug) : null;
   const latest = [...game.cards].sort((a, b) => b.obtainedAt - a.obtainedAt).slice(0, 4);
   const dailyMission = game.missions.find((mission) => !mission.done)
     ?? game.missions.find((mission) => mission.done && !mission.claimed)
@@ -304,15 +314,11 @@ export function HomeView({
 
   return (
     <div className="view home-view">
-      <section className="welcome-row">
-        <div>
-          <h1>Prêt pour un nouveau drop&nbsp;?</h1>
-        </div>
-        <div className="season-badge">
-          <Trophy size={15} />
-          <span>{CATALOG_SIZE} Cartes</span>
-        </div>
-      </section>
+      <header className="drop-intro">
+        <div className="drop-edition"><span>LE DROP</span><span>ÉDITION {String(CATALOG_EDITION_NUMBER).padStart(2, "0")}</span></div>
+        <h1>Un sachet.<br /><em>Cinq créateurs.</em></h1>
+        <p>{needsAccount ? "Connecte-toi. Ta collection t’attend." : stock > 0 ? "Le prochain nom de ta collection est peut-être dedans." : "Le prochain sachet se prépare. Ton Binder reste ouvert."}</p>
+      </header>
 
       {/* Le bandeau du direct. Il n'apparaît que si l'app sait vraiment qui
           streame (données fraîches) : sinon il n'y a rien à dire. Il est
@@ -366,7 +372,7 @@ export function HomeView({
       <section className="open-panel">
         <div className="stock-row">
           <div>
-            <span>Disponibles</span>
+            <span>Ta réserve</span>
             <strong>
               {stock}<small>/{pack.max}</small>
             </strong>
@@ -375,7 +381,7 @@ export function HomeView({
               jeu n'a aucune animation perpétuelle. */}
           <div className={`timer-copy${nextAt === null ? " full" : ""}`}>
             <Clock3 size={14} />
-            <span>{formatCountdown(nextAt, tick)}</span>
+            <span>{nextAt === null ? "Réserve pleine" : `+1 dans ${formatCountdown(nextAt, tick)}`}</span>
           </div>
         </div>
         <button
@@ -394,18 +400,6 @@ export function HomeView({
             {needsAccount ? "Se connecter pour ouvrir" : stock > 0 ? "Ouvrir le booster" : "Recharge en cours"}
           </span>
           {needsAccount || stock > 0 ? <ChevronRight size={19} /> : null}
-        </button>
-        <button
-          className="secondary-action"
-          onClick={onUseHourglass}
-          disabled={serverReserve || stock >= pack.max || game.player.hourglasses <= 0 || usingHourglass}
-        >
-          <Hourglass size={15} />
-          <span>
-            {serverReserve
-              ? "Sablier indisponible en ligne"
-              : `Utiliser 1 sablier (${game.player.hourglasses} disp.) · avance de 15 min`}
-          </span>
         </button>
         <div className="guarantee-row">
           <ShieldCheck size={14} />
@@ -427,6 +421,8 @@ export function HomeView({
           <ChevronRight size={14} />
         </button>
 
+        <details className="drop-pack-details">
+          <summary>Jetons et sabliers <ChevronRight size={15} /></summary>
         {/* Les jetons : la monnaie lente des boosters, dépensée à l'Atelier. */}
         <div className="token-row">
           <Coins size={14} />
@@ -438,6 +434,49 @@ export function HomeView({
             {game.tokens.missing > 0 ? `encore ${game.tokens.missing}` : "une carte au choix"}
           </span>
         </div>
+        <button
+          className="secondary-action"
+          onClick={onUseHourglass}
+          disabled={serverReserve || stock >= pack.max || game.player.hourglasses <= 0 || usingHourglass}
+        >
+          <Hourglass size={15} />
+          <span>
+            {serverReserve
+              ? "Sablier indisponible en ligne"
+              : `Utiliser 1 sablier (${game.player.hourglasses} disp.) · avance de 15 min`}
+          </span>
+        </button>
+        </details>
+      </section>
+
+      <section className="drop-activities" aria-label="À jouer aujourd’hui">
+        <div className="drop-section-label"><span>APRÈS LE DROP</span><span>À TON RYTHME</span></div>
+        <div className="home-links">
+          <button type="button" className="daily-goal" onClick={onShowMissions} aria-label="Voir l’objectif du jour">
+            <span>OBJECTIF DU JOUR</span>
+            {dailyMission ? (
+              <>
+                <strong>{dailyMission.label}</strong>
+                <small>{dailyMission.done ? "Terminé · récompense à réclamer" : `${dailyMission.progress} / ${dailyMission.target}`}</small>
+              </>
+            ) : (
+              <>
+                <strong>Tes missions du jour sont terminées</strong>
+                <small>Reviens demain pour un nouvel objectif.</small>
+              </>
+            )}
+            <ChevronRight size={17} />
+          </button>
+          <button type="button" className="text-link" onClick={onShowMissions}>
+            <span>Objectifs et saisons</span>
+            <ChevronRight size={15} />
+          </button>
+          <button type="button" className="text-link" onClick={onShowOdds}>
+            <span>Taux de drop publiés</span>
+            <ChevronRight size={15} />
+          </button>
+        </div>
+
         {friendsOpening > 0 ? (
           <button
             type="button"
@@ -509,31 +548,6 @@ export function HomeView({
           <ChevronRight size={14} />
         </button>
 
-        <div className="home-links">
-          <button type="button" className="daily-goal" onClick={onShowMissions} aria-label="Voir l’objectif du jour">
-            <span>OBJECTIF DU JOUR</span>
-            {dailyMission ? (
-              <>
-                <strong>{dailyMission.label}</strong>
-                <small>{dailyMission.done ? "Terminé · récompense à réclamer" : `${dailyMission.progress} / ${dailyMission.target}`}</small>
-              </>
-            ) : (
-              <>
-                <strong>Tes missions du jour sont terminées</strong>
-                <small>Reviens demain pour un nouvel objectif.</small>
-              </>
-            )}
-            <ChevronRight size={17} />
-          </button>
-          <button type="button" className="text-link" onClick={onShowMissions}>
-            <span>Objectifs et saisons</span>
-            <ChevronRight size={15} />
-          </button>
-          <button type="button" className="text-link" onClick={onShowOdds}>
-            <span>Taux de drop publiés</span>
-            <ChevronRight size={15} />
-          </button>
-        </div>
       </section>
 
       {/* Le second paquet, et le seul autre : celui de **ta** famille, une fois
@@ -599,14 +613,13 @@ export function HomeView({
         </button>
       </section>
 
-      <section className="section-block">
+      <section className="section-block drop-findings">
         <div className="section-heading">
           <div>
+            <span className="drop-section-kicker">LES NOMS QUI RESTENT</span>
             <h2>Dernières trouvailles</h2>
           </div>
-          <span className="completion-pill">
-            {game.stats.uniqueCreators}/{CREATORS.length}
-          </span>
+          <button type="button" className="drop-binder-link" onClick={onShowCollection}>Mon Binder <ChevronRight size={15} /></button>
         </div>
         {latest.length ? (
           <div className="mini-card-row">
@@ -618,6 +631,7 @@ export function HomeView({
                   creator={creator}
                   variant={card.variant}
                   compact
+                  onClick={() => setInspectCard(card)}
                   liveStream={liveFor(live, creator.login, now)}
                 />
               ) : null;
@@ -633,6 +647,13 @@ export function HomeView({
           </div>
         )}
       </section>
+      {inspectCard && inspectedCreator ? createPortal(
+        <div ref={findingFocus} tabIndex={-1}>
+        <CardInspectModal creator={inspectedCreator} variant={inspectCard.variant}
+          ownedCount={game.cards.filter((card) => card.creatorSlug === inspectCard.creatorSlug && card.variant === inspectCard.variant).length}
+          liveStream={liveFor(live, inspectedCreator.login, now)} onClose={() => setInspectCard(null)} />
+        </div>, document.body
+      ) : null}
     </div>
   );
 }

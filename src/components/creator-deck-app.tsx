@@ -653,6 +653,7 @@ export function CreatorDeckApp() {
             game={game}
             friendsOpening={friendsOpening}
             onShowInbox={() => setNotificationsOpen(true)}
+            onShowCollection={() => setTab("collection")}
             onOpen={() => void handleOpenPack()}
             onUseHourglass={handleUseHourglass}
             onShowOdds={ouvrirFeuille(setOddsOpen)}
@@ -672,7 +673,7 @@ export function CreatorDeckApp() {
           />
         ) : null}
         {tab === "collection" ? (
-          <CollectionView game={game} themeStyle={themeStyle} onCraft={handleCraftFromBinder} />
+          <CollectionView game={game} themeStyle={themeStyle} onCraft={handleCraftFromBinder} onGoDrop={() => setTab("home")} />
         ) : null}
         {tab === "missions" ? (
           <MissionsView

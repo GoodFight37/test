@@ -6,11 +6,12 @@
  */
 import { useMemo, useState, type CSSProperties } from "react";
 
-import { ArrowDownWideNarrow, ChevronLeft, ChevronRight, Search, X } from "lucide-react";
+import { ArrowDownWideNarrow, BookOpen, ChevronLeft, ChevronRight, Search, X } from "lucide-react";
 
 import { CreatorCard } from "@/components/creator-card";
 
 import { CardInspectModal } from "@/components/card-inspect-modal";
+import { SEASON_BY_ID } from "@/lib/seasons";
 import { BINDER_SORTS, sortBinder, type BinderSort } from "@/lib/binder-sort";
 
 import { useNow } from "@/hooks/use-game";
@@ -24,7 +25,7 @@ import { liveFor } from "@/lib/live";
 import { craftQuote, type GameView } from "@/lib/game-engine";
 
 
-type CollectionFilter = "all" | "owned" | "live" | "retired" | Rarity;
+type CollectionFilter = "all" | "owned" | "missing" | "live" | "retired" | Rarity;
 
 const RARITY_COUNTS = CREATORS.reduce<Record<Rarity, number>>(
   (acc, creator) => {
@@ -39,15 +40,18 @@ export function CollectionView({
   game,
   themeStyle,
   onCraft,
+  onGoDrop,
 }: {
   game: GameView;
   themeStyle?: CSSProperties;
   /** Rejoindre un créateur manquant : dit `true` quand c'est payé. */
   onCraft: (slug: string) => Promise<boolean>;
+  onGoDrop?: () => void;
 }) {
   // Le classeur s'ouvre sur **ce qu'on possède**. Une première collection vide
   // reçoit une invitation à ouvrir un booster et un accès explicite au catalogue.
   const [filter, setFilter] = useState<CollectionFilter>("owned");
+  const [pageGoal, setPageGoal] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState<BinderSort>("catalog");
   const [page, setPage] = useState(0);
@@ -111,7 +115,9 @@ export function CollectionView({
     // tirables). Sans filtre « Sortants », ils restent visibles — une carte
     // possédée qui disparaîtrait de son propre classeur serait un bug.
     const retiredCards = RETIRED_CREATORS.filter((creator) => owned.has(creator.slug));
+    const goalSlugs = pageGoal ? new Set(SEASON_BY_ID.get(pageGoal)?.slugs ?? []) : null;
     const matches = (creator: Creator) => {
+      if (goalSlugs && !goalSlugs.has(creator.slug)) return false;
       if (q) {
         const hay = `${creator.displayName} ${creator.login} ${creator.category} #${creator.rank}`.toLocaleLowerCase("fr");
         if (!hay.includes(q)) return false;
@@ -122,6 +128,7 @@ export function CollectionView({
     const current = CREATORS.filter((creator) => {
       if (!matches(creator)) return false;
       if (filter === "owned") return owned.has(creator.slug);
+      if (filter === "missing") return !owned.has(creator.slug);
       if (filter === "live") return liveFor(live, creator.login, now) !== null;
       if (filter !== "all") return creator.rarity === filter;
       return true;
@@ -137,7 +144,7 @@ export function CollectionView({
       (slug) => owned.get(slug)?.latestAt ?? 0,
     );
     return filter === "all" ? [...sorted, ...retiredCards] : sorted;
-  }, [filter, live, now, owned, query, sort]);
+  }, [filter, live, now, owned, pageGoal, query, sort]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / perPage));
   const showPager = filtered.length > perPage;
@@ -146,7 +153,13 @@ export function CollectionView({
     safePage * perPage,
     (safePage + 1) * perPage,
   );
-  const progress = Math.round((game.stats.uniqueCreators / CREATORS.length) * 100);
+  const progress = Math.floor((game.stats.uniqueCreators / CREATORS.length) * 100);
+  const nextPages = useMemo(() => game.seasons
+    .filter((season) => season.owned > 0 && season.owned < season.total)
+    .sort((a, b) => (a.total - a.owned) - (b.total - b.owned) || (b.owned / b.total) - (a.owned / a.total) || a.id.localeCompare(b.id))
+    .slice(0, 3), [game.seasons]);
+  const activePage = pageGoal ? game.seasons.find((season) => season.id === pageGoal) : null;
+
   // Combien de cartes du classeur ne sont plus tirables : ce sont les Sortants
   // du joueur, et c'est ce que le filtre compte.
   const retiredOwned = useMemo(
@@ -158,6 +171,7 @@ export function CollectionView({
     <div className="view collection-view" style={themeStyle}>
       <section className="page-title-row">
         <div>
+          <span className="drop-section-kicker">LES NOMS QUE TU GARDES</span>
           <h1>Mon classeur</h1>
         </div>
         <div className="collection-score">
@@ -179,6 +193,43 @@ export function CollectionView({
             <span>{game.stats.totalCards} cartes obtenues</span>
           </div>
         </>
+      ) : null}
+
+      {game.stats.uniqueCreators > 0 ? (
+        <div className="binder-quick-views" aria-label="Parcourir ma collection">
+          <button type="button" aria-pressed={sort === "recent" && filter === "owned" && !pageGoal && !query} onClick={() => {
+            setSort("recent"); setFilter("owned"); setPageGoal(null); setQuery(""); setPage(0);
+          }}>Dernières reçues <ChevronRight size={15} /></button>
+          <span>{game.stats.duplicates} doublon{game.stats.duplicates > 1 ? "s" : ""} recyclable{game.stats.duplicates > 1 ? "s" : ""}</span>
+        </div>
+      ) : null}
+
+      {nextPages.length > 0 ? (
+        <section className="binder-next-pages" aria-label="Pages à compléter">
+          <div className="drop-section-label"><span>UNE PAGE À COMPLÉTER</span><BookOpen size={16} /></div>
+          {nextPages.slice(0, 1).map((season) => (
+            <button key={season.id} type="button" aria-pressed={pageGoal === season.id}
+              onClick={() => { setPageGoal(season.id); setFilter("missing"); setQuery(""); setPage(0); }}>
+              <span className="binder-page-number">{season.id.replace("S", "")}</span>
+              <span className="binder-page-title"><strong>{season.name}</strong><small>{season.owned} / {season.total} noms réunis</small></span>
+              <span className="binder-page-left">Encore <b>{season.total - season.owned}</b></span>
+              <ChevronRight size={16} />
+            </button>
+          ))}
+          {nextPages.length > 1 ? (
+            <details className="binder-other-pages">
+              <summary>Les autres pages en cours <ChevronRight size={15} /></summary>
+              {nextPages.slice(1).map((season) => (
+                <button key={season.id} type="button" aria-pressed={pageGoal === season.id}
+                  onClick={() => { setPageGoal(season.id); setFilter("missing"); setQuery(""); setPage(0); }}>
+                  <span className="binder-page-title"><strong>{season.name}</strong><small>{season.owned} / {season.total} noms réunis</small></span>
+                  <span className="binder-page-left">Encore <b>{season.total - season.owned}</b></span>
+                  <ChevronRight size={16} />
+                </button>
+              ))}
+            </details>
+          ) : null}
+        </section>
       ) : null}
 
       {/* La recherche, le tri et les filtres restent **collés sous la barre**
@@ -233,6 +284,7 @@ export function CollectionView({
             [
               ["all", `Toutes (${CREATORS.length})`],
               ["owned", `Obtenues (${game.stats.uniqueCreators})`],
+              ["missing", "À découvrir"],
               // Les Sortants n'apparaissent que s'il y en a : un filtre vide n'a
               // rien à faire dans la barre.
               ...(retiredOwned
@@ -253,11 +305,13 @@ export function CollectionView({
             <button
               key={value}
               className={filter === value ? "active" : ""}
+              aria-pressed={filter === value}
               onClick={() => {
                 // **Aucun son.** Le joueur a demandé le 8 octobre 2026 au soir
                 // de retirer les deux derniers sons de déplacement, le filtre
                 // et la page : changer de filtre, c'est aller ailleurs.
                 setFilter(value);
+                setPageGoal(null);
                 setPage(0);
               }}
             >
@@ -267,6 +321,13 @@ export function CollectionView({
         </div>
       </div>
 
+
+      {activePage ? (
+        <div className="binder-active-page" role="status">
+          <span>À découvrir · <strong>{activePage.name}</strong></span>
+          <button type="button" aria-label="Retirer le filtre de page" onClick={() => { setPageGoal(null); setPage(0); }}><X size={17} /></button>
+        </div>
+      ) : null}
 
       {showPager ? <div className="binder-pager">
         <button
@@ -325,7 +386,8 @@ export function CollectionView({
               <>
                 <strong>Ta collection commence avec le prochain booster.</strong>
                 <span>Les cartes que tu découvres apparaîtront ici.</span>
-                <button type="button" onClick={() => setFilter("all")}>Voir les créateurs à découvrir</button>
+                {onGoDrop ? <button type="button" className="binder-first-drop" onClick={onGoDrop}>Retour au Drop <ChevronRight size={16} /></button> : null}
+                <button type="button" onClick={() => { setFilter("all"); setPageGoal(null); setPage(0); }}>Voir les créateurs à découvrir</button>
               </>
             ) : (
               <span>Aucune carte ne correspond à cette recherche.</span>

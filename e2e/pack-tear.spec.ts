@@ -29,6 +29,8 @@ test("the revealed card keeps the extracted card's size and center in a full-scr
   await expect(reveal).toBeVisible();
   await expect(page.locator(".app-shell")).toHaveJSProperty("inert", true);
   await expect(reveal).toBeFocused();
+  // Perfect locks the controls briefly: test tab wrapping once they are available.
+  await expect(reveal.locator(".reveal-next")).toBeEnabled();
   await page.keyboard.press("Shift+Tab");
   await expect(reveal.locator(".reveal-next")).toBeFocused();
   await page.keyboard.press("Tab");

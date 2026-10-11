@@ -1,0 +1,181 @@
+/* Le Drop est une table de collectionneur : un sachet, un ticket, des pages.
+   Les effets du sachet et des cartes restent dans leurs feuilles dédiées. */
+.home-view { padding-top: 22px; }
+.drop-edition, .drop-section-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: .12em;
+}
+.drop-edition > span:first-child { color: var(--accent-light); }
+.drop-intro h1 {
+  margin: 12px 0 8px;
+  color: var(--paper);
+  font-family: var(--font-display);
+  font-size: clamp(38px, 10vw, 50px);
+  font-weight: 600;
+  line-height: .98;
+  letter-spacing: -.02em;
+  text-transform: uppercase;
+}
+.drop-intro h1 em { font-style: normal; color: var(--muted); }
+.drop-intro p { max-width: 34ch; margin: 0; color: var(--muted); font-size: 13px; line-height: 1.5; }
+.home-view .pack-stage {
+  isolation: isolate;
+  min-height: 0;
+  margin: 12px 0 0;
+  padding: 18px 12px 14px;
+  gap: 10px;
+  border-top: 1px solid var(--line);
+}
+.home-view .pack-stage::before {
+  content: "DROP";
+  position: absolute;
+  z-index: -1;
+  top: 18%;
+  left: 50%;
+  transform: translateX(-50%);
+  color: transparent;
+  -webkit-text-stroke: 1px var(--line-strong);
+  font: 700 clamp(100px, 31vw, 170px)/1 var(--font-display);
+  letter-spacing: .025em;
+  pointer-events: none;
+}
+.home-view .pack-stage .pack-artwork.pack-live { width: min(42vw, 156px, 24dvh); }
+.home-view .pack-copy h2 { font-size: 24px; letter-spacing: .07em; }
+.home-view .pack-copy span { font-size: 12px; }
+.home-view .pull-hint { font-size: 12px; }
+.home-view .pack-shadow { bottom: 90px; }
+
+/* Le ticket crème est la seule surface claire : c'est là qu'on ouvre. */
+.home-view .open-panel {
+  position: relative;
+  margin-top: 6px;
+  padding: 16px;
+  border: none;
+  border-radius: 2px;
+  background: var(--paper);
+  color: var(--ink);
+}
+.home-view .open-panel::before, .home-view .open-panel::after {
+  content: "";
+  position: absolute;
+  top: 52px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--bg);
+}
+.home-view .open-panel::before { left: -7px; }
+.home-view .open-panel::after { right: -7px; }
+.home-view .stock-row { margin-bottom: 14px; align-items: center; }
+.home-view .stock-row > div:first-child > span { color: var(--ink); font-size: 12px; }
+.home-view .stock-row strong { font-family: var(--font-display); font-size: 30px; line-height: 1; }
+.home-view .stock-row strong small { color: var(--muted-2); font-size: 20px; }
+.home-view .timer-copy { color: var(--accent-deep); font-size: 12px; font-variant-numeric: tabular-nums; }
+.home-view .timer-copy.full { color: var(--ink); }
+.home-view .primary-action { background: var(--accent-deep); color: var(--paper); min-height: 54px; border-radius: 2px; }
+.home-view .primary-action:disabled { background: var(--panel-3); color: var(--paper); opacity: .65; }
+.home-view .guarantee-row { align-items: flex-start; color: var(--ink); font-size: 12px; line-height: 1.5; text-align: center; }
+.home-view .guarantee-row svg { flex: none; margin-top: 2px; color: var(--accent-deep); }
+.home-view .open-panel .pity-row { color: var(--ink); border-color: var(--muted); font-size: 12px; }
+.home-view .open-panel .pity-row svg { color: var(--accent-deep); }
+.home-view .open-panel .pity-row.now { font-weight: 600; }
+.drop-pack-details { margin-top: 8px; border-top: 1px dashed var(--muted); }
+.drop-pack-details summary { display: flex; min-height: 44px; align-items: center; justify-content: space-between; color: var(--ink); font-size: 12px; cursor: pointer; list-style: none; }
+.drop-pack-details summary::-webkit-details-marker { display: none; }
+.drop-pack-details[open] summary svg { transform: rotate(90deg); }
+.drop-pack-details summary:focus-visible { outline: 2px solid var(--accent-deep); outline-offset: 2px; }
+.home-view .token-row, .home-view .token-row strong, .home-view .token-goal { color: var(--ink); }
+.home-view .secondary-action { color: var(--ink); border-color: var(--muted); font-size: 12px; line-height: 1.5; padding-block: 9px; }
+
+.drop-activities { margin-top: 28px; }
+.drop-activities .home-links { margin: 0; }
+.drop-activities .daily-goal {
+  min-height: 90px;
+  margin: 14px 0 0;
+  padding: 14px 38px 14px 14px;
+  border: 0;
+  border-left: 3px solid var(--accent);
+  border-radius: 0;
+  background: var(--bg-soft);
+}
+.drop-activities .daily-goal > span { color: var(--accent-light); font-size: 12px; letter-spacing: .08em; }
+.drop-activities .daily-goal strong { font-family: var(--font-display); font-size: 22px; font-weight: 600; white-space: normal; }
+.drop-activities .daily-goal small { font-size: 12px; }
+.drop-activities .daily-goal > svg { color: var(--muted); }
+.drop-activities .pity-row { min-height: 48px; }
+.home-view .scene-block { margin-top: 28px; border-radius: 2px; background: none; border-color: var(--line-strong); }
+.home-view .scene-head { align-items: flex-start; gap: 12px; }
+.home-view .scene-head h2 { font-size: 25px; }
+.home-view .scene-state { font-size: 12px; }
+.home-view .scene-family-copy span { font-size: 12px; }
+.home-view .scene-action { min-height: 48px; border-radius: 2px; }
+.drop-findings { margin-top: 28px; padding-top: 20px; border-top: 1px solid var(--line-strong); }
+.drop-section-kicker { color: var(--muted); font-size: 12px; font-weight: 500; letter-spacing: .1em; }
+.drop-findings .section-heading { align-items: flex-end; gap: 8px; }
+.drop-findings h2 { margin-top: 6px; font-size: 27px; }
+.drop-binder-link { display: inline-flex; min-height: 44px; align-items: center; gap: 4px; padding: 0; border: 0; background: none; color: var(--paper); font-size: 12px; cursor: pointer; white-space: nowrap; }
+.drop-findings .mini-card-row { padding: 18px 6px 8px; gap: 8px; }
+.drop-findings .mini-card-row .creator-card:nth-child(2n) { transform: translateY(5px); }
+.drop-findings .empty-collection { border: 1px dashed var(--line-strong); background: none; border-radius: 2px; }
+
+/* Le Binder garde ses pochettes courtes ; les pages guident sans gonfler le DOM. */
+.collection-view .page-title-row h1 { margin-top: 7px; font-size: 38px; font-weight: 600; }
+.collection-view .collection-score strong { font-family: var(--font-display); font-size: 32px; }
+.collection-view .progress-track.large { height: 3px; border-radius: 0; }
+.collection-view .collection-meta { margin-top: 10px; font-size: 12px; }
+.binder-quick-views { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 10px 0; }
+.binder-quick-views > button { display: flex; align-items: center; gap: 5px; min-height: 44px; padding: 0; background: none; border: none; color: var(--paper); font-size: 13px; cursor: pointer; }
+.binder-quick-views > button[aria-pressed="true"] { color: var(--accent-light); }
+.binder-quick-views > span { max-width: 45%; color: var(--muted); font-size: 12px; text-align: right; }
+.binder-next-pages { margin: 4px 0 20px; }
+.binder-next-pages .drop-section-label { padding: 10px 0; }
+.binder-next-pages button { display: flex; width: 100%; min-height: 72px; align-items: center; gap: 10px; padding: 12px 0; border: 0; border-bottom: 1px solid var(--line-strong); background: none; text-align: left; cursor: pointer; }
+.binder-next-pages button[aria-pressed="true"] { border-bottom-color: var(--accent-light); }
+.binder-page-number { min-width: 32px; color: var(--muted); font-family: var(--font-display); font-size: 26px; }
+.binder-page-title { display: flex; min-width: 0; flex: 1; flex-direction: column; gap: 4px; }
+.binder-page-title strong { font-size: 14px; font-weight: 500; line-height: 1.35; }
+.binder-page-title small { color: var(--muted); font-size: 12px; }
+.binder-page-left { display: flex; flex-direction: column; align-items: flex-end; color: var(--muted); font-size: 12px; }
+.binder-page-left b { color: var(--paper); font-family: var(--font-display); font-size: 27px; font-weight: 500; }
+.binder-next-pages button > svg { color: var(--muted); flex: none; }
+.binder-active-page { display: flex; justify-content: space-between; align-items: center; gap: 10px; min-height: 48px; margin-top: 12px; padding-left: 10px; border-left: 2px solid var(--accent); background: var(--bg-soft); font-size: 12px; }
+.binder-active-page > button { display: grid; width: 44px; min-height: 44px; place-items: center; background: none; border: 0; cursor: pointer; flex: none; }
+.collection-view .binder-page { border-radius: 3px; }
+
+@media (max-width: 360px) {
+  .drop-intro h1 { font-size: 38px; }
+  .drop-edition, .drop-section-label { font-size: 12px; letter-spacing: .06em; }
+  .home-view .open-panel { padding: 13px; }
+  .drop-findings .section-heading { align-items: flex-start; flex-direction: column; }
+  .drop-findings .drop-binder-link { min-height: 44px; }
+  .binder-page-number { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .drop-findings .mini-card-row .creator-card { transform: none; }
+}
+
+.binder-other-pages summary { display: flex; min-height: 44px; justify-content: space-between; align-items: center; color: var(--muted); font-size: 12px; cursor: pointer; list-style: none; }
+.binder-other-pages summary::-webkit-details-marker { display: none; }
+.binder-other-pages[open] summary svg { transform: rotate(90deg); }
+.binder-other-pages summary:focus-visible { outline: 2px solid var(--accent-light); outline-offset: 2px; }
+.collection-view .binder-empty-state .binder-first-drop { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 48px; background: var(--paper); color: var(--ink); border: none; border-radius: 2px; }
+
+/* Sur un téléphone court, le bouton reste visible dès l’arrivée. */
+@media (max-width: 600px) and (max-height: 700px) {
+  .home-view { padding-top: 12px; }
+  .drop-intro h1 { margin-block: 8px 6px; font-size: 32px; }
+  .drop-intro p { font-size: 12px; line-height: 1.35; }
+  .home-view .pack-stage { margin-top: 10px; padding: 10px 8px 8px; gap: 6px; }
+  .home-view .pack-stage .pack-artwork.pack-live { width: min(34vw, 100px, 16dvh); }
+  .home-view .pack-copy { display: none; }
+  .home-view .pack-stage::before { font-size: 110px; }
+  .home-view .pull-hint { font-size: 11px; }
+  .home-view .open-panel { padding: 12px; }
+  .home-view .stock-row { margin-bottom: 10px; }
+}
