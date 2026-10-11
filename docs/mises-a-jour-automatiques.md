@@ -10,8 +10,9 @@ actuellement servi. Aucun secret dans le code, les tests ou le bundle.
 
 ## État au 11 octobre 2026
 
-Mécanisme préparé et testé localement, **activation non validée** : le secret de
-connexion GitHub et l'historique réel des migrations restent à vérifier. Aucun
+Mécanisme préparé et testé localement, **connexion réelle non validée**. Malik
+confirme l’enregistrement du secret GitHub et des versions manquantes 0043–0046
+après contrôle conforme des fonctions. L’historique précédent contient 0001–0042. Aucun
 accès à la production, aucun déploiement réel exécuté par l'agent. Malik indique
 avoir appliqué 0046 et confirme le tutoriel sur son téléphone ; l'ouverture des
 quatre cadeaux restants n'a pas été explicitement confirmée.
@@ -49,8 +50,11 @@ connexion : cela ne prouve pas qu'il est activé.
    **New repository secret** → nom `SUPABASE_DB_URL` → URI complète → enregistrer.
    Il s'agit d'un accès administrateur PostgreSQL, réservé au workflow de
    production ; les jobs des PR ne reçoivent aucun secret.
-4. Après vérification de l'historique, faire un premier contrôle en lecture
-   seule depuis une machine configurée :
+4. Après CI verte du commit courant, Actions → **Mise à jour Supabase** →
+   **Run workflow** sur `main`, garder **dry_run cochée** et **approve_manual
+   décochée**. Cela teste réellement la connexion même sans nouvelle migration.
+   Vérifier le message « Connexion TLS, projet CreatorDeck et historique vérifiés ».
+   Ce mode ne lance aucune migration. Alternative depuis une machine configurée :
    `node scripts/supabase-deploy.mjs --dry-run`. Le CLI officiel est nécessaire
    pour l'exécution réelle, et `pg` pour la connexion de contrôle.
    En GitHub Actions, outils installés automatiquement avec versions explicites.
@@ -82,7 +86,7 @@ restent obligatoires ; ajouter les migrations au vérifieur du projet.
 
 Une migration manual bloque tout le plan jusqu'à une exécution explicite dans
 [Actions → Mise à jour Supabase](https://github.com/GoodFight37/CreatorDeck/actions/workflows/supabase-deploy.yml)
-→ **Run workflow**, branche `main`, option de validation manual cochée. Examiner
+→ **Run workflow**, branche `main`, option de validation manual cochée et **dry_run décochée**. Examiner
 **toutes** les migrations en attente avant ce clic : il autorise tout le plan,
 pas un seul fichier. Le commit doit avoir une CI complète verte. Ce mécanisme
 ne remplace pas une sauvegarde récupérable lorsqu'elle est requise.
@@ -97,7 +101,7 @@ l'historique avant de relancer.
 
 ## Vérifications locales effectuées
 
-- `node scripts/supabase-deploy.test.mjs` : 14/14 tests, code 0.
+- `node scripts/supabase-deploy.test.mjs` : 15/15 tests, code 0.
 - `node scripts/supabase-deploy.mjs --check` : code 0, contrôle hors réseau.
 - `node scripts/supabase-deploy.mjs` : code 0, aucune nouvelle migration,
   aucun accès réseau et aucun SQL exécuté.

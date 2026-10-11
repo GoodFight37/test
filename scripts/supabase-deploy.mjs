@@ -49,7 +49,7 @@ async function main() {
   const baseline = JSON.parse(await readFile('supabase/deploy-baseline.json', 'utf8'));
   // Vérifier les fichiers même quand il n'y a rien à déployer.
   const baselineVersions = files.filter(f => baseline[f.name]).map(f => f.version);
-  migrationPlan(files, baseline, baselineVersions, process.argv.includes('--check') || process.argv.includes('--approve-manual'));
+  migrationPlan(files, baseline, baselineVersions, process.argv.includes('--check') || process.argv.includes('--dry-run') || process.argv.includes('--approve-manual'));
   if (process.argv.includes('--check')) {
     console.log('Politique des migrations valide. Aucun accès réseau.');
     return;
@@ -74,9 +74,11 @@ async function main() {
     const tables = await client.query("select to_regclass('supabase_migrations.schema_migrations') history, to_regclass('public.onboarding_state') tutorial, to_regclass('public.return_gifts') gift");
     if (!tables.rows[0].history || !tables.rows[0].tutorial || !tables.rows[0].gift) throw new Error('Schéma cible incomplet : aucune migration exécutée.');
     const result = await client.query('select version from supabase_migrations.schema_migrations order by version');
-    pending = migrationPlan(files, baseline, result.rows.map(r => r.version), process.argv.includes('--approve-manual'));
+    pending = migrationPlan(files, baseline, result.rows.map(r => r.version), process.argv.includes('--dry-run') || process.argv.includes('--approve-manual'));
   } finally { await client.end(); }
-  if (!pending.length) { console.log('La base est déjà à jour.'); return; }
+  console.log('Connexion TLS, projet CreatorDeck et historique vérifiés.');
+  if (process.env.GITHUB_STEP_SUMMARY) await appendFile(process.env.GITHUB_STEP_SUMMARY, 'Connexion TLS au projet CreatorDeck et historique vérifiés.\n');
+  if (!pending.length) { console.log('La base est déjà à jour. Aucun SQL de migration exécuté.'); return; }
   console.log(`Migrations validées : ${pending.map(f => f.name).join(', ')}`);
   if (process.argv.includes('--dry-run')) { console.log('Lecture seule : aucun SQL exécuté.'); return; }
   const run = spawnSync('supabase', ['db', 'push', '--db-url', url.toString(), '--yes'], { encoding: 'utf8', timeout: 300000 });

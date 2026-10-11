@@ -1,6 +1,6 @@
 ## Automatisation Supabase — 11 octobre 2026
 
-Préparée/testée localement : workflow après CI verte, plan protégé, historique standard Supabase, secret GitHub isolé. **Activation bloquée par configuration initiale non vérifiée** : lire l'historique réel et configurer SUPABASE_DB_URL. Aucun SQL/déploiement réel exécuté. Vercel indépendant, ordre de publication non contrôlé. [Procédure](mises-a-jour-automatiques.md).
+Préparée/testée localement : workflow après CI verte, plan protégé, historique standard Supabase, secret GitHub isolé. **Connexion réelle à valider** : historique 0001–0046 enregistré après preuves et secret GitHub ajouté selon retour opérateur ; lancer le contrôle manuel dry_run après CI verte. Aucun SQL/déploiement réel exécuté. Vercel indépendant, ordre de publication non contrôlé. [Procédure](mises-a-jour-automatiques.md).
 
 ## Rejouer le tutoriel — 11 octobre 2026
 

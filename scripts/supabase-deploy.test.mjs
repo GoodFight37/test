@@ -1,4 +1,5 @@
 import { test } from 'node:test';
+import { spawnSync } from 'node:child_process';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { checkTarget, migrationPlan, PROJECT } from './supabase-deploy.mjs';
@@ -31,6 +32,8 @@ test('mauvais projet, hôte, utilisateur, base ou mot de passe absent : arrêt',
 test('le workflow attend une CI complète, main et utilise la révision vérifiée', async () => {
   const yaml = await readFile('.github/workflows/supabase-deploy.yml', 'utf8');
   assert.match(yaml, /workflow_run:/);
+  assert.match(yaml, /dry_run:[\s\S]*?default: true/);
+  assert.match(yaml, /if \[ "\$DRY_RUN" = "true" \]; then\s+node scripts\/supabase-deploy\.mjs --dry-run\s+elif/);
   assert.match(yaml, /conclusion == 'success'/);
   assert.match(yaml, /head_repository.full_name == github.repository/);
   assert.match(yaml, /workflow_run.event == 'push'/);
@@ -38,4 +41,13 @@ test('le workflow attend une CI complète, main et utilise la révision vérifi�
   assert.match(yaml, /ref: \$\{\{ steps.revision.outputs.sha \}\}/);
   assert.match(yaml, /cancel-in-progress: false/);
   assert.doesNotMatch(yaml, /migration repair|--include-all/);
+});
+
+test('dry-run force la vérification de connexion même sans migration nouvelle', () => {
+  const result = spawnSync(process.execPath, ['scripts/supabase-deploy.mjs', '--dry-run'], {
+    encoding: 'utf8', env: { ...process.env, SUPABASE_DB_URL: '' },
+  });
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /Configurer le secret GitHub SUPABASE_DB_URL/);
+  assert.doesNotMatch(result.stdout, /Aucune nouvelle migration/);
 });

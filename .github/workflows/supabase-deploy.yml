@@ -7,6 +7,10 @@ on:
     branches: [main]
   workflow_dispatch:
     inputs:
+      dry_run:
+        description: "Vérifier la connexion et l’historique uniquement, sans appliquer de migration"
+        type: boolean
+        default: true
       approve_manual:
         description: "Appliquer aussi les migrations explicitement classées manual (après revue)"
         type: boolean
@@ -72,9 +76,12 @@ jobs:
         if: steps.revision.outputs.ready == 'true'
         env:
           SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+          DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run }}
           APPROVE_MANUAL: ${{ github.event_name == 'workflow_dispatch' && inputs.approve_manual }}
         run: |
-          if [ "$APPROVE_MANUAL" = "true" ]; then
+          if [ "$DRY_RUN" = "true" ]; then
+            node scripts/supabase-deploy.mjs --dry-run
+          elif [ "$APPROVE_MANUAL" = "true" ]; then
             node scripts/supabase-deploy.mjs --approve-manual
           else
             node scripts/supabase-deploy.mjs
