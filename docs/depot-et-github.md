@@ -1,3 +1,5 @@
+> Mise à jour du 11 octobre 2026 : les quatre jobs de `.github/workflows/verification.yml` vérifient désormais les pushes et PR. Un workflow de migrations Supabase est préparé, mais son activation nécessite encore le secret et la vérification d'historique ; [procédure](mises-a-jour-automatiques.md). Les mentions ci-dessous « à la main » décrivent l'état historique d'octobre 8–9, pas la CI actuelle.
+
 # Le dépôt, en clair
 
 But : **un dépôt, une branche de référence, un historique léger.**

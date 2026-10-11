@@ -41,6 +41,10 @@ jobs:
           cache: npm
       - name: Installer les dépendances verrouillées
         run: npm ci
+      - name: Politique des migrations de production (sans secret)
+        run: |
+          node scripts/supabase-deploy.mjs --check
+          node scripts/supabase-deploy.test.mjs
       - name: Tests unitaires
         run: npm test
       - name: Scénarios et captures d'écrans
