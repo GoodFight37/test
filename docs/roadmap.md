@@ -1,3 +1,7 @@
+## Rejouer le tutoriel — 11 octobre 2026
+
+Implémenté et testé localement : reset individuel rejoue les trois étapes puis rend le cadeau restant accessible, sans recrédit. Nouvelle migration 0046 et client nécessaires ; production/validation téléphone attendues. 0045 est déjà active d'après le contrôle transmis par Malik, quatre cadeaux subsistent sur le compte testé. Critère restant : nouveau build + 0046, puis parcours réel Toi → reset → tutoriel → message → ouverture des quatre cadeaux. Voir la passation pour commandes/résultats.
+
 ## Chantier livré localement — tutoriel, reset global, cadeau — 10 octobre 2026
 
 ## Suivi production — bug d'ouverture du cadeau — 11 octobre 2026

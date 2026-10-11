@@ -223,3 +223,5 @@ d'un booster cadeau. Ainsi les anciennes versions du client passent aussi la
 barrière serveur après application de la migration. Le tirage cadeau et ses
 poids restent inchangés. Validation locale et statut de publication consignés
 dans la passation ; la correction de schéma n'est pas encore appliquée.
+
+| D-023 / 2026-10-11 | Une réinitialisation individuelle rejoue le tutoriel, tout en préservant le cadeau unique | Demande de Malik : rejouer la séquence depuis le bouton reset. 0046 efface la fin du tutoriel du seul compte authentifié ; le client retire ses deux marqueurs et revient au Drop. Le stock cadeau et le claim restent intacts : reset n'accorde pas cinq nouveaux boosters et ne touche pas les autres comptes. SQL jetable et UI simulée couvrent l'ordre tutoriel puis cadeau et les quatre ouvertures restantes ; validation téléphone/production séparée. |

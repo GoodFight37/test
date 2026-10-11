@@ -516,6 +516,10 @@ remplacé sans que le joueur le demande : l'écran **Mon compte** affiche alors
       → complète `scene_pack_choices()` : petites familles, Scène pleine et
       réserve du dernier candidat. Migration additive ; test Postgres jetable
       non exécuté sous le compte Administrateur Windows (voir D-014/K-014).
+   - [`supabase/migrations/0046_reset_rejoue_tutoriel.sql`](../supabase/migrations/0046_reset_rejoue_tutoriel.sql)
+     → réinitialiser sa partie rejoue le tutoriel du compte connecté. Application
+     sans reset immédiat, rejouable, aucun cadeau recrédité ; conserver 0044/0045.
+     Validée sur PostgreSQL jetable ; application production encore attendue.
    - [`supabase/migrations/0013_progression.sql`](../supabase/migrations/0013_progression.sql)
      → que le **plancher de malchance** et la **série de jours**
      existent aussi côté serveur : après 12 boosters d'affilée sans Légendaire,

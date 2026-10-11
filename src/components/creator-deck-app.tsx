@@ -363,6 +363,17 @@ export function CreatorDeckApp() {
   const onboardingReady = !cloud.configured || Boolean(cloud.userId && cloud.onboarding && !cloud.onboardingBusy);
   const showTutorial = tutorialStep !== null || (!welcomeSeen && (completedTutorialKey === null || completedTutorial) && onboardingReady && !cloud.onboarding?.tutorialCompleted && !completedTutorial);
 
+  function replayWelcomeTutorial() {
+    try {
+      window.localStorage.removeItem(welcomeKey);
+      window.localStorage.removeItem(tutorialCompletionKey);
+    } catch { /* Le tutoriel reste rejouable dans cette session. */ }
+    setWelcomeSeenKey(null);
+    setCompletedTutorialKey(null);
+    setTutorialStep(0);
+    setTab("home");
+  }
+
   async function finishWelcomeTutorial() {
     if (cloud.configured && cloud.userId) {
       const saved = await cloudStore.completeTutorial();
@@ -677,6 +688,7 @@ export function CreatorDeckApp() {
         ) : null}
         {tab === "profile" ? (
           <ProfileView
+            onProgressReset={replayWelcomeTutorial}
             game={game}
             onNotice={showNotice}
             onError={showError}

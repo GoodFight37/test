@@ -121,6 +121,24 @@ describe("les écrans", () => {
     expect(window.localStorage.getItem("creatordeck-tutorial:completed:local")).toBe("done");
   });
 
+  it("rejoue le tutoriel après une réinitialisation et mémorise sa nouvelle fin", async () => {
+    window.localStorage.setItem("creatordeck-tutorial:local", "done");
+    window.localStorage.setItem("creatordeck-tutorial:completed:local", "done");
+    await application();
+    const confirm = vi.spyOn(window, "confirm").mockReturnValue(true);
+    banc.appuyer("Toi");
+    banc.appuyer("Réinitialiser la progression");
+    expect(document.body.textContent).toContain("CREATORDECK · PREMIERS PAS");
+    expect(document.body.textContent).toContain("1 / 3");
+    expect(window.localStorage.getItem("creatordeck-tutorial:completed:local")).toBeNull();
+    banc.appuyer("Continuer");
+    banc.appuyer("Continuer");
+    banc.appuyer("Terminer");
+    expect(window.localStorage.getItem("creatordeck-tutorial:completed:local")).toBe("done");
+    expect(document.body.textContent).not.toContain("CREATORDECK · PREMIERS PAS");
+    confirm.mockRestore();
+  });
+
   it("tire un booster et montre la révélation", async () => {
     await application();
     banc.appuyer("Ouvrir le booster");

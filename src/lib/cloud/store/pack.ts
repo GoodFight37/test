@@ -398,6 +398,7 @@ export function packActions(ctx: CloudStoreContext) {
       ctx.publish({ busy: true, message: null, isError: false });
       try {
         await ready.api.resetProgress();
+        await this.refreshOnboarding();
         await ctx.pushAfterServer();
         await ctx.fetchPackStatus();
         const message = "Nouvelle partie : la réserve et le Paquet Scène repartent de zéro, en ligne comprise.";

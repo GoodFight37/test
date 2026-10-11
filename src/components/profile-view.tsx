@@ -55,6 +55,7 @@ const VARIANT_SCORE = { standard: 0, live: 1, holo: 2, gold: 3 } as const;
 export function ProfileView({
   game,
   onNotice,
+  onProgressReset,
   onError,
   onShowOdds,
   onShowMissions,
@@ -71,6 +72,7 @@ export function ProfileView({
   onShowWishlist,
 }: {
   game: GameView;
+  onProgressReset?: () => void;
   onNotice: (message: string) => void;
   onError: (message: string) => void;
   onShowOdds: () => void;
@@ -186,12 +188,16 @@ export function ProfileView({
     // remonter est celle que `gameStore.reset()` vient d'écrire.
     gameStore.reset();
     if (!cloud.configured || !cloud.userId) {
+      onProgressReset?.();
       onNotice("Nouvelle partie lancée.");
       return;
     }
     onNotice("Nouvelle partie lancée.");
     const outcome = await cloudStore.resetProgress();
-    if (outcome.status === "done") onNotice(outcome.message);
+    if (outcome.status === "done") {
+      onProgressReset?.();
+      onNotice(outcome.message);
+    }
     else if (outcome.status === "unavailable") {
       // L'appareil a bien redémarré : le serveur, lui, garde sa réserve. On le
       // dit, plutôt que de laisser croire à une remise à zéro complète.
