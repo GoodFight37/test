@@ -1,8 +1,12 @@
 # Accès au reset Supabase — 11 octobre 2026
 
-Le reset réel est autorisé par Malik. Il reste conditionné à la vérification du
-projet cible, du schéma courant et d'une sauvegarde récupérable. Aucune application
-réelle de 0044 n'a été exécutée par cette session.
+Malik a choisi d'accepter la perte de progression actuelle (deux joueurs en
+test) sans retour arrière. Il a appliqué manuellement 0043 et 0044 depuis le SQL
+Editor du projet, pas cette session Cloud. Le contrôle reçu le 11 octobre 2026
+confirme le marqueur `tutoriel-cadeau-2026`, 16 états tutoriel, 16 cadeaux et
+zéro tirage, carte, échange ouvert ou annonce active. La capture du dashboard
+indique que le forfait gratuit ne fournit pas de sauvegardes projet. Le bug
+post-reset du claim cadeau est suivi sous K-019 ; ne pas rejouer 0044.
 
 ## Voie directe sur téléphone
 

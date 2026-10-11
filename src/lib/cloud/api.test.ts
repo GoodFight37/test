@@ -668,9 +668,9 @@ describe("tirage serveur", () => {
     expect(result.cards[0]).toMatchObject({ creatorSlug: "kaicenat", rarity: "legendary", variant: "live" });
   });
 
-  it("suit le statut onboarding, termine le tutoriel puis réclame et tire les 5 cadeaux via RPC dédiées", async () => {
-    const { api, calls } = client(() => ({ body: { tutorial_completed: true, gift_available: true, gift_remaining: 5, cards: Array.from({ length: 5 }, (_, i) => ({ creatorSlug: ["kaicenat", "ibai", "ninja", "auronplay", "rubius"][i], rarity: "rare", variant: "standard", rareDrop: false })), save: null } }), signedIn());
-    await expect(api.onboardingStatus()).resolves.toMatchObject({ tutorialCompleted: true, giftAvailable: true, giftRemaining: 5 });
+  it("suit le statut onboarding, distingue le claim du stock restant, puis tire via RPC dédiées", async () => {
+    const { api, calls } = client(() => ({ body: { tutorial_completed: true, gift_available: true, gift_claimed: true, gift_remaining: 4, cards: Array.from({ length: 5 }, (_, i) => ({ creatorSlug: ["kaicenat", "ibai", "ninja", "auronplay", "rubius"][i], rarity: "rare", variant: "standard", rareDrop: false })), save: null } }), signedIn());
+    await expect(api.onboardingStatus()).resolves.toMatchObject({ tutorialCompleted: true, giftAvailable: true, giftClaimed: true, giftRemaining: 4 });
     await api.completeTutorial();
     await api.claimReturnGift();
     const gift = await api.openReturnGiftPack();

@@ -169,7 +169,7 @@ export type CloudState = {
   inboxUnread: number;
   /** Un chargement du carnet est en cours. */
   inboxBusy: boolean;
-  onboarding: { tutorialCompleted: boolean; giftAvailable: boolean; giftRemaining: number; message: string } | null;
+  onboarding: { tutorialCompleted: boolean; giftAvailable: boolean; giftClaimed: boolean; giftRemaining: number; message: string } | null;
   onboardingBusy: boolean;
   /**
    * L'étagère des Last Packs : les paquets encore exposés (les miens et ceux

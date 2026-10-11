@@ -210,3 +210,16 @@ Le helper cadeau est isolé pour éviter de remplacer `_save_add_pack_cards`,
 utilisé par les boosters ordinaires. Les tests vérifient la conservation exacte
 de ce helper et l'absence de droits clients sur le nouveau helper cadeau.
 Validation locale : 1 109 tests projet et SQL jetable réussis.
+
+## D-022 — 11 octobre 2026 : claim cadeau rejouable après la première ouverture
+
+En production, le premier appui réclame les cinq boosters puis en ouvre un.
+Le client appelait encore `claim_return_gift()` aux appuis suivants ; la base
+refusait « déjà réclamé » alors que quatre boosters restaient. Le claim garde
+une seule transition de stock, mais un appel répété renvoie un succès sans
+ajouter de boosters. Le statut serveur expose `gift_claimed` à partir de
+`claimed_at`, et l'interface transforme ensuite l'action en ouverture directe
+d'un booster cadeau. Ainsi les anciennes versions du client passent aussi la
+barrière serveur après application de la migration. Le tirage cadeau et ses
+poids restent inchangés. Validation locale et statut de publication consignés
+dans la passation ; la correction de schéma n'est pas encore appliquée.

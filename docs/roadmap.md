@@ -1,5 +1,15 @@
 ## Chantier livré localement — tutoriel, reset global, cadeau — 10 octobre 2026
 
+## Suivi production — bug d'ouverture du cadeau — 11 octobre 2026
+
+Malik a appliqué 0043 puis 0044 dans le SQL Editor Supabase. Le résultat de contrôle partagé confirme le marqueur, 16 lignes tutoriel, 16 cadeaux et zéro tirage/carte/échange en attente/annonce active. En jeu, après le premier claim et l'ouverture d'un booster, les quatre ouvertures restantes échouent car le client rappelle le RPC de claim à chaque clic. Cause prouvée dans `creator-deck-app.tsx` et `claim_return_gift()`.
+
+- [x] Migration additive 0045 : claim rejouable sans recrédit, statut `gift_claimed` exact ; tests API et SQL réussis sur Postgres jetable. Application de 0045 en production en attente.
+- [x] Client : après le premier claim, afficher « Ouvrir un booster cadeau · N restants » et ouvrir directement ; `npm test` 1 109/1 109 et `npm run ecrans` 73/73.
+- [ ] Publier le code quand le push Git sera accessible. Le Cloud a refusé `git ls-remote` via le proxy. Pas de validation téléphone supplémentaire pour cette correction.
+
+Le code et les vérifications détaillées sont dans la passation. Aucun autre taux, récompense ou règle de tirage n'est modifié.
+
 Code `f97ea42` et checkpoint `30490b4` poussés sur `main`. Migration additive `0044_tutoriel_reset_cadeau.sql`, tutoriel trois étapes et sauvegarde serveur, cadeau de 5 tirages distincts disponible après tutoriel, tirage serveur existant, CTA « Retour au Drop ».
 
 - [x] Reset global one-shot : identifiants, profils, amis et historiques conclus conservés ; trades en attente annulés, annonces actives retirées, progression/réserves remises au départ ; cadeau préprovisionné pour chaque compte existant.

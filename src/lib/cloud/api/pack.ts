@@ -317,10 +317,10 @@ export async function resetProgress(core: CloudCore): Promise<void> {
   await core.rpc("reset_progress", {});
 }
 
-export async function onboardingStatus(core: CloudCore): Promise<{ tutorialCompleted: boolean; giftAvailable: boolean; giftRemaining: number; message: string }> {
+export async function onboardingStatus(core: CloudCore): Promise<{ tutorialCompleted: boolean; giftAvailable: boolean; giftClaimed: boolean; giftRemaining: number; message: string }> {
   const record = asRecord(await core.rpc("onboarding_status", {}));
   if (!record) throw new CloudError("Statut du tutoriel illisible.", "invalid_response", 0);
-  return { tutorialCompleted: record.tutorial_completed === true, giftAvailable: record.gift_available === true, giftRemaining: Number(record.gift_remaining ?? 0), message: String(record.message ?? "") };
+  return { tutorialCompleted: record.tutorial_completed === true, giftAvailable: record.gift_available === true, giftClaimed: record.gift_claimed === true, giftRemaining: Number(record.gift_remaining ?? 0), message: String(record.message ?? "") };
 }
 
 export async function completeTutorial(core: CloudCore): Promise<void> {

@@ -170,6 +170,7 @@ try {
   const tribunal = await readFile(path.join(MIGRATIONS, "0042_tribunal.sql"), "utf8");
   const sceneCompatibility = await readFile(path.join(MIGRATIONS, "0043_scene_pack_eligibilite.sql"), "utf8");
   const tutorielReset = await readFile(path.join(MIGRATIONS, "0044_tutoriel_reset_cadeau.sql"), "utf8");
+  const cadeauClaimRetry = await readFile(path.join(MIGRATIONS, "0045_cadeau_claim_rejouable.sql"), "utf8");
   const gardes = await readFile(path.join(MIGRATIONS, "0037_gardes.sql"), "utf8");
   const migrations = [
     ["0001_comptes_cloud.sql", await readFile(path.join(MIGRATIONS, "0001_comptes_cloud.sql"), "utf8")],
@@ -216,6 +217,7 @@ try {
     ["0042_tribunal.sql", tribunal],
     ["0043_scene_pack_eligibilite.sql", sceneCompatibility],
     ["0044_tutoriel_reset_cadeau.sql", tutorielReset],
+    ["0045_cadeau_claim_rejouable.sql", cadeauClaimRetry],
   ];
   // Droits de table façon Supabase, posés **avant** les migrations.
   //
@@ -232,7 +234,7 @@ try {
   `);
 
   for (const [name, sql] of migrations) {
-    if (name !== "0044_tutoriel_reset_cadeau.sql") await client.query(sql);
+    if (name !== "0044_tutoriel_reset_cadeau.sql" && name !== "0045_cadeau_claim_rejouable.sql") await client.query(sql);
   }
 
   const ordinaryPackHelperBeforeReset = (await client.query("select pg_get_functiondef('public._save_add_pack_cards(uuid,jsonb,integer,timestamptz,integer,timestamptz)'::regprocedure) as definition")).rows[0].definition;
@@ -260,6 +262,7 @@ try {
   await seedResetSave(RESET_B);
   await seedResetSave(RESET_C);
   await client.query(tutorielReset);
+  await client.query(cadeauClaimRetry);
   check("cadeau : helper des boosters ordinaires inchangé", (await client.query("select pg_get_functiondef('public._save_add_pack_cards(uuid,jsonb,integer,timestamptz,integer,timestamptz)'::regprocedure) as definition")).rows[0].definition === ordinaryPackHelperBeforeReset);
   check("cadeau : helper privé inaccessible aux clients", (await client.query("select has_function_privilege('anon','public._save_add_gift_cards(uuid,jsonb,integer,timestamptz,integer,timestamptz)','execute') a, has_function_privilege('authenticated','public._save_add_gift_cards(uuid,jsonb,integer,timestamptz,integer,timestamptz)','execute') b")).rows.every(r => !r.a && !r.b));
   const resetProof = await client.query(`
@@ -279,15 +282,19 @@ try {
   check("reset global : cadeau 5 par compte, trades pendants annulés, historiques terminés préservés", proof.gifts === 3 && proof.cancelled === 1 && proof.completed_trades === 1 && proof.sold_listings === 1 && proof.active_listings === 0 && proof.friends === 1 && proof.player_id === RESET_A && proof.level === "1" && proof.packs === "2" && proof.points === 40 && proof.tokens === 0, JSON.stringify(proof));
   await client.query("select set_config('test.uid',$1,false)", [RESET_A]);
   const beforeTutorial = (await client.query("select public.onboarding_status() as r")).rows[0].r;
-  check("cadeau : indisponible avant la fin du tutoriel", beforeTutorial.tutorial_completed === false && beforeTutorial.gift_available === false && beforeTutorial.gift_remaining === 5);
+  check("cadeau : indisponible avant la fin du tutoriel", beforeTutorial.tutorial_completed === false && beforeTutorial.gift_available === false && beforeTutorial.gift_claimed === false && beforeTutorial.gift_remaining === 5);
   await refuses("cadeau : impossible de réclamer avant le tutoriel", RESET_A, "select public.claim_return_gift()", [], "termine le tutoriel");
   const completedTutorial = (await asPlayer(RESET_A, "select public.complete_tutorial() as r")).rows[0].r;
   check("tutoriel : fin unique active le cadeau ensuite", completedTutorial.tutorial_completed === true && completedTutorial.gift_available === true && completedTutorial.gift_remaining === 5);
   const claimGift = (await asPlayer(RESET_A, "select public.claim_return_gift() as r")).rows[0].r;
-  check("cadeau : claim unique renvoie le message demandé", claimGift.claimed === true && claimGift.boosters_remaining === 5 && claimGift.message === "Malik a décidé de réinitialiser la progression de tout le monde pour implémenter le tutoriel et il vous offre 5 boosters.");
-  await refuses("cadeau : deuxième claim refusé", RESET_A, "select public.claim_return_gift()", [], "déjà réclamé");
-  const giftPacks = [];
-  for (let i = 0; i < 5; i += 1) giftPacks.push((await asPlayer(RESET_A, "select public.open_return_gift_pack() as r")).rows[0].r);
+  check("cadeau : premier claim unique renvoie le message demandé", claimGift.claimed === true && claimGift.already_claimed === false && claimGift.boosters_remaining === 5 && claimGift.message === "Malik a décidé de réinitialiser la progression de tout le monde pour implémenter le tutoriel et il vous offre 5 boosters.");
+  check("cadeau : le statut expose le claim séparément du stock", (await asPlayer(RESET_A, "select public.onboarding_status() as r")).rows[0].r.gift_claimed === true);
+  const claimRetry = (await asPlayer(RESET_A, "select public.claim_return_gift() as r")).rows[0].r;
+  check("cadeau : répéter le claim confirme sans recréditer le stock", claimRetry.claimed === true && claimRetry.already_claimed === true && claimRetry.boosters_remaining === 5);
+  const giftPacks = [(await asPlayer(RESET_A, "select public.open_return_gift_pack() as r")).rows[0].r];
+  const claimAfterFirstDraw = (await asPlayer(RESET_A, "select public.claim_return_gift() as r")).rows[0].r;
+  check("cadeau : claim répété après ouverture préserve les quatre boosters restants", claimAfterFirstDraw.already_claimed === true && claimAfterFirstDraw.boosters_remaining === 4);
+  for (let i = 0; i < 4; i += 1) giftPacks.push((await asPlayer(RESET_A, "select public.open_return_gift_pack() as r")).rows[0].r);
   check("cadeau : cinq boosters séparés ouvrent cinq fois cinq cartes", giftPacks.every((pack) => pack.cards.length === 5) && giftPacks.at(-1)?.gift_remaining === 0 && (await client.query("select count(*)::int n from public.return_gift_draws where user_id=$1", [RESET_A])).rows[0].n === 5);
   const giftSavedProgress = (await client.query("select state->>'openings' openings,state->>'packs' packs from public.saves where user_id=$1", [RESET_A])).rows[0];
   check("cadeau : réserve sauvegardée conservée sans création de pack_state ni paiement", (await client.query("select count(*)::int n from public.pack_state where user_id=$1", [RESET_A])).rows[0].n === 0 && (await client.query("select count(*)::int n from public.wallet_ledger where user_id=$1 and kind='pack'", [RESET_A])).rows[0].n === 0 && giftSavedProgress.openings === "0" && giftSavedProgress.packs === "2");
@@ -295,6 +302,7 @@ try {
   await client.query("select set_config('test.uid','',false)");
   await client.query("update public.saves set state=jsonb_set(state,'{xp}','12345') where user_id=$1", [RESET_A]);
   await client.query(tutorielReset);
+  await client.query(cadeauClaimRetry);
   check("reset global : migration idempotente et progression postérieure intacte", (await client.query("select state->>'xp' xp from public.saves where user_id=$1", [RESET_A])).rows[0].xp === "12345");
   console.log(`→ migrations ${migrations.map(([name]) => name.slice(0, 4)).join(", ")} exécutées\n`);
 

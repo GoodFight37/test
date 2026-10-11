@@ -379,9 +379,11 @@ export function CreatorDeckApp() {
     if (giftBusy) return;
     setGiftBusy(true);
     try {
-      const claim = await cloudStore.claimReturnGift();
-      if (claim.status !== "done") { showError(claim.message, claim.status === "unavailable" && claim.reason === "no-session" ? "account" : null); return; }
-      setNotice("Cadeau réclamé : 5 boosters distincts de ta réserve t’attendent.");
+      if (!cloud.onboarding?.giftClaimed) {
+        const claim = await cloudStore.claimReturnGift();
+        if (claim.status !== "done") { showError(claim.message, claim.status === "unavailable" && claim.reason === "no-session" ? "account" : null); return; }
+        setNotice("Cadeau réclamé : 5 boosters distincts de ta réserve t’attendent.");
+      }
       setTutorialStep(null);
       setWelcomeSeenKey(welcomeKey);
       const result = await cloudStore.openReturnGiftPack();
@@ -630,7 +632,7 @@ export function CreatorDeckApp() {
       {welcomeSeen && cloud.userId && cloud.onboarding?.giftAvailable && !drawnCards.length ? (
         <div className="welcome-gift-card" role="status">
           <div><strong>Un cadeau t’attend</strong><p>{cloud.onboarding.message || "Malik a décidé de réinitialiser la progression de tout le monde pour implémenter le tutoriel et il vous offre 5 boosters."}</p></div>
-          <button type="button" disabled={giftBusy} onClick={() => void claimAndOpenWelcomeGift()}>{giftBusy ? "Préparation…" : `Réclamer mes 5 boosters · ${cloud.onboarding.giftRemaining} restants`}</button>
+          <button type="button" disabled={giftBusy} onClick={() => void claimAndOpenWelcomeGift()}>{giftBusy ? "Préparation…" : cloud.onboarding.giftClaimed ? `Ouvrir un booster cadeau · ${cloud.onboarding.giftRemaining} restants` : "Réclamer mes 5 boosters"}</button>
         </div>
       ) : null}
       <TopBar game={game} />
