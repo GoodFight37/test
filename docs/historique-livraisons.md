@@ -1,3 +1,23 @@
+## 11 octobre 2026 — accueil Drop et Binder : table de collectionneur
+
+Code [4f91c71](https://github.com/GoodFight37/CreatorDeck/commit/4f91c71ff72dd0428044bbc33fce5a47c4cbacfa) publié sur main, SHA distant vérifié. Accueil avec sachet
+compact, titre éditorial et ticket crème pour ouvrir, outils dépliables,
+objectif/activités ensuite, dernières cartes consultables et lien Binder.
+Binder : dernières reçues, pages commencées à compléter et vrais manquants,
+retour au Drop à vide ; 999/1 000 reste 99 %. Aucun changement de récompense ou
+tirage. Demande de Malik exécutée : les deux priorités, pas de chantier suivant.
+
+Local : 1 109 tests logique, 78 tests d’écran, 42 parcours navigateur réussis
+(2 scénarios cloud ignorés faute de configuration), typecheck/lint/build
+webpack/diff-check réussis. Captures examinées à 320 × 568, 412 × 915 et
+1280 × 900. Corrections de sélecteur Fermer et attente de déverrouillage Perfect
+dans les tests, rapports JS Playwright exclus du lint. Aucun téléphone physique
+ou déploiement Vercel vérifié ; aucune opération production Supabase.
+
+Passation commune Cloud/local mise à jour et brouillon cadeau suspendu archivé
+en texte, hors suite de tests. Malik a également confirmé le dry_run Supabase
+réussi après CA intégrée ; aucune migration appliquée par ce contrôle.
+
 ## 11 octobre 2026 — CA Supabase fournie et intégrée
 
 Certificat public prod-ca-2021.crt reçu de Malik : signature valide, autorité Supabase Root 2021 CA, expiration avril 2031. Chargement par défaut dans le script, aucun nouveau secret nécessaire. 21/21 tests locaux ; nouveau dry_run réel encore requis. Aucun accès production ni application de migration par l’agent.

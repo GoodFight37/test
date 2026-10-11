@@ -1,0 +1,116 @@
+import { expect, test } from "./fixtures";
+
+const SESSION_KEY = "creatordeck.cloud.session";
+const USER_ID = "11111111-1111-4111-8111-111111111111";
+const GIFT_MESSAGE = "Malik a décidé de réinitialiser la progression de tout le monde pour implémenter le tutoriel et il vous offre 5 boosters.";
+
+test("tutoriel puis cadeau unique : les cinq boosters cadeau s'ouvrent sans nouveau claim", async ({ page }) => {
+  let tutorialCompleted = false;
+  let giftClaimed = false;
+  let giftRemaining = 5;
+  let standardPacks = 2;
+  const calls: string[] = [];
+  const giftDraws: string[][] = [];
+
+  await page.route("**/rest/v1/rpc/*", async (route) => {
+    const name = route.request().url().split("/rpc/")[1] ?? "";
+    calls.push(name);
+    const answer = (value: unknown) => route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify(value),
+    });
+
+    if (name === "onboarding_status") {
+      return answer({
+        tutorial_completed: tutorialCompleted,
+        gift_available: tutorialCompleted,
+        gift_claimed: giftClaimed,
+        gift_remaining: giftRemaining,
+        message: GIFT_MESSAGE,
+      });
+    }
+    if (name === "pack_status") {
+      return answer({ packs: standardPacks, last_regen_at: new Date().toISOString(), openings: 0, pity: 0, streak: 0, scene_day: null });
+    }
+    if (name === "wallet_get") return answer({ ok: true, points: 0 });
+    if (name === "tokens_get") return answer({ ok: true, tokens: 0 });
+    if (name === "complete_tutorial") {
+      tutorialCompleted = true;
+      return answer({ ok: true });
+    }
+    if (name === "claim_return_gift") {
+      if (!tutorialCompleted || giftClaimed) return route.fulfill({ status: 400, contentType: "application/json", body: JSON.stringify({ message: "Cadeau indisponible." }) });
+      giftClaimed = true;
+      return answer({ ok: true });
+    }
+    if (name === "open_return_gift_pack") {
+      if (!tutorialCompleted || !giftClaimed || giftRemaining <= 0) return route.fulfill({ status: 400, contentType: "application/json", body: JSON.stringify({ message: "Cadeau indisponible." }) });
+      const packNumber = 6 - giftRemaining;
+      const cards = Array.from({ length: 5 }, (_, index) => ({
+        creatorSlug: ["kaicenat", "ibai", "ninja", "auronplay", "rubius"][index],
+        rarity: ["legendary", "epic", "rare", "uncommon", "common"][index],
+        variant: "standard",
+        rareDrop: false,
+      }));
+      giftRemaining -= 1;
+      giftDraws.push(cards.map((card) => card.creatorSlug));
+      return answer({ cards, gift_remaining: giftRemaining, save: null });
+    }
+    if (name.startsWith("push_save")) return answer({ status: "ok" });
+    if (name.startsWith("open_pack")) {
+      standardPacks -= 1;
+      return answer({ packs: standardPacks, last_regen_at: new Date().toISOString(), openings: 1, cards: [], save: null });
+    }
+    return answer({});
+  });
+
+  await page.addInitScript(([key, userId]) => {
+    window.localStorage.setItem(key, JSON.stringify({
+      accessToken: "fake-e2e-token",
+      refreshToken: "fake-e2e-refresh",
+      expiresAt: Date.now() + 3_600_000,
+      userId,
+      email: "test@example.invalid",
+    }));
+  }, [SESSION_KEY, USER_ID] as const);
+
+  await page.goto("/");
+  const tutorial = page.getByRole("dialog", { name: "Tutoriel CreatorDeck" });
+  await expect(tutorial).toBeVisible();
+  await expect(page.getByRole("status").filter({ hasText: GIFT_MESSAGE })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Réclamer mes 5 boosters" })).toHaveCount(0);
+
+  await tutorial.getByRole("button", { name: "Continuer", exact: true }).click();
+  await tutorial.getByRole("button", { name: "Continuer", exact: true }).click();
+  await tutorial.getByRole("button", { name: "Terminer", exact: true }).click();
+
+  const gift = page.getByRole("status").filter({ hasText: GIFT_MESSAGE });
+  await expect(gift).toBeVisible();
+  expect(calls.indexOf("complete_tutorial")).toBeGreaterThan(-1);
+  expect(calls.indexOf("complete_tutorial")).toBeLessThan(calls.indexOf("claim_return_gift"));
+  await expect(gift.getByRole("button", { name: "Réclamer mes 5 boosters" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Ouvrir le booster" })).toBeEnabled();
+
+  for (let opened = 1; opened <= 5; opened += 1) {
+    const giftButton = gift.getByRole("button");
+    await expect(giftButton).toHaveText(opened === 1 ? "Réclamer mes 5 boosters" : `Ouvrir un booster cadeau · ${6 - opened} restants`);
+    await giftButton.click();
+    await expect(page.getByRole("dialog", { name: "Résultat du booster" })).toBeVisible();
+    const reveal = page.getByRole("dialog", { name: "Résultat du booster" });
+    await expect(reveal.locator(".reveal-card")).toHaveCount(5);
+    await reveal.getByRole("button", { name: "Fermer", exact: true }).click();
+
+    if (opened < 5) {
+      await expect(gift.getByRole("button")).toHaveText(`Ouvrir un booster cadeau · ${5 - opened} restants`);
+    }
+  }
+
+  await expect(gift).toHaveCount(0);
+  expect(giftDraws).toHaveLength(5);
+  expect(giftDraws.every((cards) => cards.length === 5)).toBe(true);
+  expect(calls.filter((call) => call === "claim_return_gift")).toHaveLength(1);
+  expect(calls.filter((call) => call === "open_return_gift_pack")).toHaveLength(5);
+  expect(standardPacks).toBe(2);
+  expect(calls.indexOf("claim_return_gift")).toBeLessThan(calls.indexOf("open_return_gift_pack"));
+});

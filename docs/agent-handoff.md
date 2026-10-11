@@ -1,3 +1,100 @@
+## Checkpoint courant — accueil Drop et Binder — 11 octobre 2026
+
+- **Demande active satisfaite côté code** : Malik autorise pendant son sommeil
+  l’accueil d’abord, puis la collection, avec une identité visuelle personnelle
+  et sans nouvelle confirmation. Retour au PC prévu ensuite : ce document est
+  la passation commune Cloud/local. Pas de nouvelle dépendance ou de mécanique.
+- Reprise du checkout existant sur `main`, HEAD local/distant vérifié
+  `37e34e63b3013e60bd9fa0db9693079cece8049c`. Travail/push sur main autorisés ;
+  aucun worktree, merge de PR, branche supprimée ou opération Supabase réelle.
+  Aucun autre écrivain observé ; le HEAD distant est resté identique pendant le
+  chantier. Relire GitHub actuel à la prochaine reprise.
+- **Drop** : titre « Un sachet. Cinq créateurs. », véritable sachet au centre,
+  ticket crème pour réserve/compte à rebours/ouverture/garanties, jetons/sabliers
+  dépliables. Objectif et activités après l’ouverture, dernières cartes
+  consultables avec accès direct au Binder. Tactile sachet, glissement, animation
+  d’ouverture et tirage existants conservés. Adaptation aux téléphones courts :
+  bouton visible dès l’arrivée à 320 × 568. Fiche récente dans un portail,
+  application inert pendant la consultation, focus rendu à la carte après.
+- **Binder** : « Dernières reçues », vrais doublons, page partielle avec le
+  moins de manquantes d’abord, autres pages repliées. Clic de page affiche les
+  slugs réellement manquants de cette saison ; filtre « À découvrir », filtre
+  de page explicite/retirable, recherche/tri et pagination 12 conservés. Vide :
+  « Retour au Drop ». Pourcentage tronqué : 999/1 000 affiche 99 %, pas 100 %.
+- Fichiers produit : `src/components/drop-view.tsx`, `binder-view.tsx`,
+  `creator-deck-app.tsx`, `src/app/drop-binder.css`, import dans `layout.tsx`.
+  Tests nouveaux : `src/ecrans-drop-binder.test.tsx`, `e2e/drop-binder.spec.ts`.
+  `e2e/pack-tear.spec.ts` attend les contrôles déverrouillés avant le test de
+  boucle Tab (Perfect verrouille temporairement les boutons). ESLint ignore
+  les seuls rapports générés Playwright, déjà hors Git. Décision D-029, K-025/026.
+
+### Vérifications locales de cette livraison
+
+Tests exécutés sur le contenu modifié du checkout, base Git `37e34e6` ; le
+commit de livraison enregistré ci-dessous contient ce même contenu vérifié.
+
+| Commande | Résultat réel | Limite |
+|---|---|---|
+| `XDG_CONFIG_HOME=/tmp/creatordeck-xdg npm test -- --maxWorkers=2` | Code 0, 71 fichiers, 1 109/1 109 | Logique/fixtures, aucune production |
+| `npm run ecrans -- --maxWorkers=2` | Code 0, 15 fichiers, 78/78 | jsdom, pas de rendu physique |
+| `npm run typecheck` | Code 0 | TypeScript |
+| `npm run lint` | Code 0 | Rapports générés exclus, produit contrôlé |
+| `node scripts/check-jargon.mjs` | Code 0, aucun jargon d’infrastructure affiché | Textes vérifiés par le script existant |
+| `XDG_CONFIG_HOME=/tmp/creatordeck-xdg NEXT_TELEMETRY_DISABLED=1 npm run build -- --webpack` | Code 0, export `/`, `/_not-found`, `/overlay` | Variables publiques Supabase absentes ; compilation sans cloud |
+| `git diff --check` | Code 0 | Diff source |
+
+**Navigateur final : code 0, 42 réussis / 2 ignorés, 1,6 minute.** Les deux
+scénarios « avec le serveur » demandent une configuration publique Supabase
+absente ici ; aucune preuve cloud réelle ou simulée nouvelle pour ces deux.
+Les six scénarios nouveaux passent, ainsi que navigation, crash local et
+déchirure. Le brouillon cadeau suspendu est volontairement exclu.
+Commande : `PLAYWRIGHT_BROWSERS_PATH=/workspace/.cache/ms-playwright npm run e2e -- e2e/navigation.spec.ts e2e/pack-crash.spec.ts e2e/pack-tear.spec.ts e2e/drop-binder.spec.ts --reporter=line`.
+Serveur réutilisé : `npm run start -- --listen 3000`, export compilé.
+
+Captures locales finales : `/workspace/scratch/drop-binder-polish/final-*.png` :
+320 × 568, 412 × 915 et 1280 × 900, accueil vide/rempli, fiche et Binder
+possédé/manquant. Captures examinées, pas de débordement horizontal ni pageerror
+sur les trois formats. Ce sont des formats simulés Chromium ; aucune nouvelle
+validation sur téléphone réel, de son/haptique natifs, Vercel ou compte réel.
+Les captures ne sont pas des snapshots versionnés.
+
+Essais intermédiaires : première commande navigateur sans le chemin Chromium
+correct a échoué avant les parcours ; avec le bon chemin, 40 réussis/2 ignorés/
+2 échecs liés au bouton dev de Next sur un clic inutile de l’onglet déjà actif.
+Premier passage export : 39 réussis/2 ignorés/3 échecs : sélecteur Fermer ambigu
+dans la fiche et test Tab trop précoce lors d’un Perfect. Sélecteur de l’en-tête
+précisé et attente `toBeEnabled` ajoutée, assertions conservées, pas de clic
+forcé. Le rerun final à 42/42 exécutés établit la correction. Lint initial : 188 erreurs
+dans le visualiseur JS généré des traces, exclu ensuite, lint produit réussi.
+Pas de SQL modifié : `supabase:verify` non relancé sur ce chantier d’interface.
+
+### Supabase : état confirmé depuis le checkpoint précédent
+
+Après `37e34e6` et la CA publique intégrée, Malik a répondu **« C’est passé »**
+au nouveau dry_run. Succès du contrôle connexion/TLS/projet/historique selon
+ce retour ; aucun log final consulté directement par l’agent. Le dry_run ne
+applique aucune migration. Ne pas redemander certificat/mot de passe/historique
+sans nouvel échec. Une future migration effective reste protégée par CI verte
+et le plan de déploiement ; ce chantier n’en ajoute aucune. Ne pas confondre
+ce succès avec l’accès réseau de la session Cloud. API GitHub Actions refusée
+(`Forbidden`) auparavant : CI/Vercel courants ne peuvent pas être annoncés verts.
+
+### Passation partagée Cloud → PC
+
+1. Lire AGENTS et ce checkpoint sur [main GitHub](https://github.com/GoodFight37/CreatorDeck/blob/main/docs/agent-handoff.md). Vérifier état, branche, HEAD et HEAD distant avant de changer le checkout PC. Ne pas écraser de changements locaux ; fetcher/examiner toute divergence avant mise à jour normale.
+2. Prendre le SHA actuel de main, pas un ancien checkout ni le SHA de base mentionné ci-dessus. Les mêmes docs servent au Cloud et au PC ; pas de copie concurrente de la roadmap. Le commit documentaire se retrouve par `git log -1 --format=%H -- docs/agent-handoff.md`.
+3. Tester la nouvelle version servie sur le téléphone de Malik : ouverture par tap/glissement, réserve, fiche récente/fermeture/retour, Binder Dernières reçues/page/manquantes ; comparer à l’identité proposée. L’esthétique et la prise en main restent une validation utilisateur. Ne pas déclarer le déploiement déjà fait sans contrôle de la version servie.
+4. Le fichier préexistant non suivi `e2e/onboarding-gift.spec.ts` reste inchangé dans le checkout Cloud et explicitement suspendu. Copie exacte consultable sur GitHub dans [agent-drafts](agent-drafts/README.md), suffixe `.txt` : hors suite et hors bundle. Ne pas le réactiver ou le présenter validé ; reprise dédiée seulement si demandée.
+5. Aucun chantier supplémentaire lancé après ces deux priorités. Ajustements tutoriel/cadeau évoqués restent pour plus tard ; ne pas refaire le reset global. Réservation Cloud libérée à la fin de cette livraison.
+
+**Code publié et SHA distant vérifié** : [4f91c71](https://github.com/GoodFight37/CreatorDeck/commit/4f91c71ff72dd0428044bbc33fce5a47c4cbacfa).
+Checkpoint documentaire destiné au commit suivant ; son SHA se retrouve avec
+`git log -1 --format=%H -- docs/agent-handoff.md`. CI distante et état Vercel non
+consultés, aucune annonce de déploiement effectif. À la fin, seul le brouillon
+original non suivi reste dans le checkout ; sa copie documentaire est partagée.
+
+---
+
 ## Checkpoint courant — CA Supabase intégrée — 11 octobre 2026
 
 - Reprise main local/distant `4108486ad76bd698be52ab01705ead4e8fd9ff00`, vérifié via ls-remote. Fichier e2e/onboarding-gift.spec.ts non suivi conservé, chantier suspendu, hors commit.

@@ -10,7 +10,10 @@ actuellement servi. Aucun secret dans le code, les tests ou le bundle.
 
 ## État au 11 octobre 2026
 
-Mécanisme préparé et testé localement, **connexion réelle non validée**. Malik
+Mécanisme préparé et testé localement. **Dry_run réel réussi selon Malik** après
+intégration de la CA publique Supabase dans `37e34e6` (retour « C’est passé »).
+Ce retour confirme le contrôle en lecture seule ; l’agent n’a pas consulté le
+log final et aucune application d’une future migration n’a été exercée. Malik
 confirme l’enregistrement du secret GitHub et des versions manquantes 0043–0046
 après contrôle conforme des fonctions. L’historique précédent contient 0001–0042. Aucun
 accès à la production, aucun déploiement réel exécuté par l'agent. Malik indique

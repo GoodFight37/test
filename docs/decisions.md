@@ -243,3 +243,30 @@ Le nouveau log GitHub établit SELF_SIGNED_CERT_IN_CHAIN avant authentification.
 ## D-028 — 11 octobre 2026 : certificat CA public intégré au dépôt
 
 Malik fournit le fichier prod-ca-2021.crt téléchargé du tableau de bord après SELF_SIGNED_CERT_IN_CHAIN. La CA publique est versionnée dans supabase/certificates et chargée par défaut via un chemin relatif au script, ce qui évite une manipulation de secret sur téléphone. SUPABASE_DB_CA_CERT reste un override optionnel. Empreinte et expiration vérifiées et testées ; même CA Node/CLI avec vérification TLS/hôte. Une signature CA valide ne prouve pas le succès d’une connexion réelle ; prochain contrôle dry_run requis. Aucun nouveau secret ou bypass TLS.
+
+## D-029 — 11 octobre 2026 : le Drop comme table de collectionneur
+
+Demande explicite de Malik : refaire l’accueil avec une âme, puis améliorer le
+Binder pendant son absence. Direction : fond sombre chaud, lettres condensées,
+sachet réel et ticket crème où ouvrir ; les objectifs et activités viennent
+après. Les dernières cartes deviennent consultables et donnent accès au Binder.
+On conserve les visuels, le moteur et les quatre piliers existants : pas de
+dépendance ou d’image inventée, pas de refonte générale. Le ticket regroupe la
+réserve, le prochain réapprovisionnement et les garanties ; jetons/sabliers se
+déplient sans déplacer l’action principale au milieu de liens secondaires.
+
+Le Binder invite à finir une page déjà commencée, calculée à partir des saisons
+et des slugs réellement configurés. Seule la page la plus proche est visible
+par défaut ; les suivantes se déplient. Son bouton filtre les vrais manquants.
+« Dernières reçues » retrouve les cartes possédées et le classeur vide retourne
+au Drop. Doublons, compteurs, tri, pagination de 12 cartes et règles restent
+ceux du moteur. 999/1 000 vaut 99 %, sans faux accomplissement.
+
+Choix écartés : tableau de bord de panneaux identiques, carrousel automatique,
+nouvelles récompenses pour compléter une page. La mise en page privilégie les
+cartes et une action d’ouverture. Fiche récente rendue dans un portail hors de
+l’app-shell pour éviter les conteneurs transformés ; focus piégé, retour au
+déclencheur et bouton retour utilisent les hooks existants.
+
+Preuves et commandes finales dans la passation ; captures et Chromium local
+ne remplacent pas une validation esthétique et tactile sur téléphone réel.

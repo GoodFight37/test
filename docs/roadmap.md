@@ -1,3 +1,29 @@
+## Accueil Drop et Binder — 11 octobre 2026
+
+Chantier demandé par Malik pendant son absence : **les deux priorités sont
+implémentées**, identité de table de collectionneur (sachet + ticket crème),
+ouverture mise au premier plan, puis objectif/activités et trouvailles
+consultables. Binder : Dernières reçues, page à compléter calculée, vrais
+manquants, retour au Drop à vide. D-029 ; mêmes moteurs et règles.
+
+- [x] Accueil et Binder responsive, contrôles clavier/retour, 78 tests d’écran,
+  1 109 tests logique, typecheck/lint/build webpack locaux réussis.
+- [x] Captures Chromium examinées : 320 × 568, 412 × 915, 1280 × 900 ;
+  pas de débordement ni erreur JavaScript sur les parcours capturés.
+- [x] Navigateur sur export final : 42 réussis/2 scénarios cloud ignorés, code 0 ;
+  six nouveaux parcours bureau/téléphone simulé compris. Code publié `4f91c71`.
+- [ ] Validation personnelle esthétique/tactile sur le téléphone de Malik,
+  avec le commit réellement servi. Ni CI distante ni Vercel inspectés ici.
+
+Commandes/résultats navigateur et état Git exact : [checkpoint courant](agent-handoff.md).
+Brouillon test cadeau conservé et suspendu dans [agent-drafts](agent-drafts/README.md).
+Passation commune Cloud/local maintenant explicite ; pas d’autre chantier lancé.
+
+**Automatisation Supabase** : Malik confirme le nouveau dry_run réussi après
+la CA intégrée dans `37e34e6`. Contrôle en lecture seule réussi selon opérateur ;
+ce retour remplace les statuts historiques « connexion à valider » ci-dessous.
+Application d’une future migration non exercée, aucune migration dans ce lot UI.
+
 ## CA Supabase intégrée — 11 octobre 2026
 
 Certificat public fourni par Malik intégré au dépôt, chargé automatiquement sans nouveau secret CA. 21/21 tests locaux, signature/empreinte/expiration vérifiées. Nouveau dry_run réel requis pour confirmer la résolution du blocage TLS ; aucune migration production exécutée. Ne pas changer le mot de passe sans nouveau refus d’authentification.
