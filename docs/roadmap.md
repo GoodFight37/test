@@ -6,7 +6,8 @@ Malik a appliqué 0043 puis 0044 dans le SQL Editor Supabase. Le résultat de co
 
 - [x] Migration additive 0045 : claim rejouable sans recrédit, statut `gift_claimed` exact ; tests API et SQL réussis sur Postgres jetable. Application de 0045 en production en attente.
 - [x] Client : après le premier claim, afficher « Ouvrir un booster cadeau · N restants » et ouvrir directement ; `npm test` 1 109/1 109 et `npm run ecrans` 73/73.
-- [ ] Publier le code quand le push Git sera accessible. Le Cloud a refusé `git ls-remote` via le proxy. Pas de validation téléphone supplémentaire pour cette correction.
+- [x] Code poussé sur `main` au commit `9710baf` et SHA distant vérifié. Statut Vercel non vérifié.
+- [ ] Appliquer 0045 dans Supabase puis vérifier le claim avec quatre boosters restants. Pas de validation téléphone supplémentaire pour cette correction.
 
 Le code et les vérifications détaillées sont dans la passation. Aucun autre taux, récompense ou règle de tirage n'est modifié.
 
