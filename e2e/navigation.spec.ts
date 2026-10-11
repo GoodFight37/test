@@ -1,4 +1,5 @@
-import { expect, test, type Page } from "@playwright/test";
+import { type Page } from "@playwright/test";
+import { expect, test, gotoDeck } from "./fixtures";
 
 /**
  * Ce que ces tests vérifient, et rien d'autre :
@@ -37,7 +38,7 @@ function tab(page: Page, label: string) {
  * n'est donc jamais silencieux pour de bon.
  */
 async function openDeck(page: Page): Promise<void> {
-  await page.goto("/");
+  await gotoDeck(page);
   await expect(tab(page, "Drop")).toBeVisible({ timeout: 30_000 });
 }
 

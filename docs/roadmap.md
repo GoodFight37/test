@@ -1,3 +1,7 @@
+## CI navigateur après tutoriel — 11 octobre 2026
+
+Échec du scénario cloud expliqué : mock onboarding incomplet et scénario ancien supposant le tutoriel terminé. Tests adaptés, sans modification produit/SQL. Suite locale 36 réussis/2 cloud ignorés, code 0 ; scénario cloud vérifié séparément, typecheck/lint réussis. Publication/CI distante à confirmer. L’automatisation Supabase attend la CI verte et le contrôle réel dry_run, pas une nouvelle configuration du secret.
+
 ## Automatisation Supabase — 11 octobre 2026
 
 Préparée/testée localement : workflow après CI verte, plan protégé, historique standard Supabase, secret GitHub isolé. **Connexion réelle à valider** : historique 0001–0046 enregistré après preuves et secret GitHub ajouté selon retour opérateur ; lancer le contrôle manuel dry_run après CI verte. Aucun SQL/déploiement réel exécuté. Vercel indépendant, ordre de publication non contrôlé. [Procédure](mises-a-jour-automatiques.md).

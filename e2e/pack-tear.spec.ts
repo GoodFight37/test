@@ -1,7 +1,7 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, gotoDeck } from "./fixtures";
 
 test("closing a consumed Scene pack returns focus to its section heading", async ({ page }) => {
-  await page.goto("/");
+  await gotoDeck(page);
   const open = page.locator(".scene-action");
   await expect(open).toBeEnabled();
   await open.focus();
@@ -16,7 +16,7 @@ test("closing a consumed Scene pack returns focus to its section heading", async
 });
 
 test("the revealed card keeps the extracted card's size and center in a full-screen scene", async ({ page }) => {
-  await page.goto("/");
+  await gotoDeck(page);
   await page.getByRole("button", { name: "Ouvrir le booster" }).click();
   const pack = page.getByRole("dialog", { name: "Ouvrir le booster" });
   await pack.getByRole("button", { name: "Ouvrir sans déchirer" }).click();
@@ -66,7 +66,7 @@ test("the revealed card keeps the extracted card's size and center in a full-scr
 
 test("reduced motion reveals a stationary front without a hidden card", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
-  await page.goto("/");
+  await gotoDeck(page);
   await page.getByRole("button", { name: "Ouvrir le booster", exact: true }).click();
   await page.getByRole("button", { name: "Ouvrir sans déchirer" }).click();
   const reveal = page.getByRole("dialog", { name: "Résultat du booster" });
@@ -80,7 +80,7 @@ test("reduced motion reveals a stationary front without a hidden card", async ({
 });
 
 test("home pack artwork, title and gesture hint do not overlap", async ({ page }) => {
-  await page.goto("/");
+  await gotoDeck(page);
   await expect(page.getByRole("button", { name: "Ouvrir le booster" })).toBeVisible();
   for (const width of [320, 360, 412, 1280]) {
     await page.setViewportSize({ width, height: 915 });
@@ -99,7 +99,7 @@ test("home pack artwork, title and gesture hint do not overlap", async ({ page }
 
 /** Pack is a single printed image, finger tears its weld, and cards emerge before the reveal. */
 test("home pack and opening use the same printed sachet, no WebGL or slider", async ({ page }) => {
-  await page.goto("/");
+  await gotoDeck(page);
   const open = page.getByRole("button", { name: "Ouvrir le booster" });
   await expect(open).toBeVisible({ timeout: 30_000 });
   const homeArt = page.locator(".pack-stage .pack-foil-image");
@@ -146,7 +146,7 @@ test("home pack and opening use the same printed sachet, no WebGL or slider", as
 
 test("reduced motion and the card-reflection switch stop the heavy pack and foil effects", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
-  await page.goto("/");
+  await gotoDeck(page);
   const homeSpecular = page.locator(".pack-specular");
   await expect(homeSpecular).toBeAttached();
   expect(await homeSpecular.evaluate((node) => getComputedStyle(node).display)).toBe("none");
@@ -191,7 +191,7 @@ test("reduced motion and the card-reflection switch stop the heavy pack and foil
 });
 
 test("finger cuts the plastic where it passes, top peels, backs rise, then reveal", async ({ page }) => {
-  await page.goto("/");
+  await gotoDeck(page);
   await page.getByRole("button", { name: "Ouvrir le booster" }).click();
   const dialog = page.getByRole("dialog", { name: "Ouvrir le booster" });
   await expect(dialog).toBeVisible();
@@ -234,7 +234,7 @@ test("finger cuts the plastic where it passes, top peels, backs rise, then revea
 });
 
 test("DIVERRON portrait never resolves to the damaged green webp", async ({ page }) => {
-  await page.goto("/");
+  await gotoDeck(page);
   const url = await page.evaluate(async () => {
     const response = await fetch("/creators/diverron-fallback.svg");
     return { status: response.status, body: await response.text() };
@@ -244,7 +244,7 @@ test("DIVERRON portrait never resolves to the damaged green webp", async ({ page
 });
 
 test("home sachet tap opens once and returns focus to the sachet", async ({ page }, testInfo) => {
-  await page.goto("/");
+  await gotoDeck(page);
   const sachet = page.getByRole("button", { name: "Ouvrir le sachet Live Drop" });
   await expect(sachet).toBeEnabled();
   const stock = Number((await page.locator(".stock-row strong").innerText()).split("/")[0]);
@@ -262,7 +262,7 @@ test("home sachet tap opens once and returns focus to the sachet", async ({ page
 });
 
 test("an abandoned home drag does not become a tap and an armed pull opens once", async ({ page }) => {
-  await page.goto("/");
+  await gotoDeck(page);
   const sachet = page.locator(".pack-artwork");
   await expect(sachet).toBeEnabled();
   const stock = Number((await page.locator(".stock-row strong").innerText()).split("/")[0]);
@@ -291,7 +291,7 @@ test("an abandoned home drag does not become a tap and an armed pull opens once"
 
 test("compact sachet keeps the weld within thumb reach and accepts both swipe directions", async ({ page }) => {
   await page.setViewportSize({ width: 360, height: 800 });
-  await page.goto("/");
+  await gotoDeck(page);
   await expect(page.getByRole("button", { name: "Ouvrir le sachet Live Drop" })).toBeEnabled();
   const stock = Number((await page.locator(".stock-row strong").innerText()).split("/")[0]);
   const touch = await page.context().newCDPSession(page);

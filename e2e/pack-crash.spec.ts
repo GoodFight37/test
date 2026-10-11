@@ -1,4 +1,5 @@
-import { expect, test, type Page } from "@playwright/test";
+import { type Page } from "@playwright/test";
+import { expect, test, gotoDeck } from "./fixtures";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
@@ -39,8 +40,8 @@ function cloudUrl(): string | null {
 }
 
 /** Ouvre le jeu et attend que le bouton d'ouverture soit là. */
-async function openDeck(page: Page): Promise<void> {
-  await page.goto("/");
+async function openDeck(page: Page, tutorial = true): Promise<void> {
+  await gotoDeck(page, tutorial);
   await expect(page.getByRole("button", { name: /Ouvrir le booster|Se connecter pour ouvrir|Recharge en cours/ })).toBeVisible({
     timeout: 30_000,
   });
@@ -137,6 +138,9 @@ test("avec le serveur : les cartes du tirage sont celles du serveur, et rien n'e
     const answer = (value: unknown) =>
       route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(value) });
 
+    if (call === "onboarding_status") {
+      return answer({ tutorial_completed: true, gift_available: false, gift_claimed: false, gift_remaining: 0, message: "" });
+    }
     if (call.startsWith("open_pack")) {
       return answer({
         packs: 2,
@@ -227,7 +231,8 @@ test("avec le serveur : les cartes du tirage sont celles du serveur, et rien n'e
     ] as const,
   );
 
-  await openDeck(page);
+  await openDeck(page, false);
+  await expect(page.getByRole("dialog", { name: "Tutoriel CreatorDeck" })).toHaveCount(0);
   await page.getByRole("button", { name: "Ouvrir le booster" }).click();
   await expect(page.getByRole("dialog", { name: "Ouvrir le booster" })).toBeVisible({ timeout: 30_000 });
   await page.getByRole("button", { name: "Ouvrir sans déchirer" }).click();
