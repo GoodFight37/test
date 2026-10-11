@@ -1,3 +1,7 @@
+## 11 octobre 2026 — CA Supabase fournie et intégrée
+
+Certificat public prod-ca-2021.crt reçu de Malik : signature valide, autorité Supabase Root 2021 CA, expiration avril 2031. Chargement par défaut dans le script, aucun nouveau secret nécessaire. 21/21 tests locaux ; nouveau dry_run réel encore requis. Aucun accès production ni application de migration par l’agent.
+
 ## 11 octobre 2026 — Support du certificat TLS Supabase
 
 Retour GitHub : SELF_SIGNED_CERT_IN_CHAIN. Support CA explicite Node et CLI ajouté, TLS/hôte vérifiés, fichier temporaire privé nettoyé. 20/20 tests locaux, pas de connexion réelle ni de modification de la base. Certificat officiel du projet encore à configurer ; ne pas changer le mot de passe pour cet échec.

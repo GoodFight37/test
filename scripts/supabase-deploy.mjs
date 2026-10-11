@@ -7,6 +7,10 @@ import { pathToFileURL } from "node:url";
 import { spawnSync } from "node:child_process";
 
 export const PROJECT = "yzxchpybqrfegvecihxf";
+export async function loadPostgresTls(certificate) {
+  const ca = certificate?.trim() ? certificate : await readFile(new URL('../supabase/certificates/prod-ca-2021.crt', import.meta.url), 'utf8');
+  return postgresTls(ca);
+}
 export function postgresTls(certificate) {
   if (!certificate?.trim()) return { rejectUnauthorized: true };
   try {
@@ -116,7 +120,7 @@ async function main() {
   }
   if (!process.env.SUPABASE_DB_URL) throw new Error('Configurer le secret GitHub SUPABASE_DB_URL pour activer les migrations.');
   const url = checkTarget(process.env.SUPABASE_DB_URL);
-  const ssl = postgresTls(process.env.SUPABASE_DB_CA_CERT);
+  const ssl = await loadPostgresTls(process.env.SUPABASE_DB_CA_CERT);
   const { default: pg } = await import('pg');
   const client = new pg.Client({
     host: url.hostname, port: Number(url.port || 5432), database: 'postgres',

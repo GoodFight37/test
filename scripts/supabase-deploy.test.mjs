@@ -3,10 +3,21 @@ import { spawnSync } from 'node:child_process';
 import assert from 'node:assert/strict';
 import { readFile, stat } from 'node:fs/promises';
 import { rootCertificates } from 'node:tls';
-import { checkTarget, migrationPlan, PROJECT, connectionFailure, postgresTls, withCertificateUrl } from './supabase-deploy.mjs';
+import { X509Certificate } from 'node:crypto';
+import { checkTarget, migrationPlan, PROJECT, connectionFailure, postgresTls, loadPostgresTls, withCertificateUrl } from './supabase-deploy.mjs';
 const old = { name: '0046_reset.sql', version: '0046', hash: 'known', sql: 'select 1;' };
 const next = { name: '0047_fix.sql', version: '0047', hash: 'new', sql: '-- creatordeck-deploy: automatic\nselect 1;' };
 const baseline = { [old.name]: old.hash };
+test('sans secret CA : certificat Supabase fourni intégré ; override explicite conservé', async () => {
+  const tls = await loadPostgresTls('');
+  assert.equal(tls.rejectUnauthorized, true);
+  const cert = new X509Certificate(tls.ca);
+  assert.equal(cert.ca, true);
+  assert.equal(cert.fingerprint256, '80:70:25:AD:50:D4:ED:21:9D:2C:9C:7D:29:9C:00:4F:82:4E:B0:0C:F7:F6:5A:FE:F6:07:D0:7B:72:E6:CA:FA');
+  assert.equal(cert.validTo, 'Apr 26 10:56:53 2031 GMT');
+  assert.deepEqual(await loadPostgresTls(rootCertificates[0]), postgresTls(rootCertificates[0]));
+  await assert.rejects(loadPostgresTls('invalid-pem'), /certificat CA PEM/);
+});
 test('CA explicite, défaut système et certificat invalide : TLS reste vérifié', () => {
   assert.deepEqual(postgresTls(undefined), { rejectUnauthorized: true });
   assert.deepEqual(postgresTls(''), { rejectUnauthorized: true });

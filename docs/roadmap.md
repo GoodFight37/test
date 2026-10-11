@@ -1,3 +1,7 @@
+## CA Supabase intégrée — 11 octobre 2026
+
+Certificat public fourni par Malik intégré au dépôt, chargé automatiquement sans nouveau secret CA. 21/21 tests locaux, signature/empreinte/expiration vérifiées. Nouveau dry_run réel requis pour confirmer la résolution du blocage TLS ; aucune migration production exécutée. Ne pas changer le mot de passe sans nouveau refus d’authentification.
+
 ## Connexion TLS Supabase — 11 octobre 2026
 
 Dry_run fourni : SELF_SIGNED_CERT_IN_CHAIN. Support certificat CA officiel préparé/testé (20 tests) ; configuration du certificat puis connexion réelle encore requises. Ne pas modifier le mot de passe pour cette erreur. TLS reste vérifié, aucun changement produit/base. [Procédure](mises-a-jour-automatiques.md).

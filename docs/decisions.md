@@ -239,3 +239,7 @@ Le dry_run manuel sur main courant fait uniquement les lectures existantes et pe
 ## D-027 — 11 octobre 2026 : autorité TLS Supabase explicite
 
 Le nouveau log GitHub établit SELF_SIGNED_CERT_IN_CHAIN avant authentification. Accepter le certificat CA PEM officiel via SUPABASE_DB_CA_CERT, conservant rejectUnauthorized=true et verify-full. Le même certificat sert au contrôle pg et au CLI (sslrootcert privé temporaire, supprimé dans finally). Sans CA fournie, la confiance système actuelle reste utilisée ; aucun bypass TLS. La documentation officielle indique Database Settings → SSL Configuration → Download Certificate. Connexion réelle non validée tant que le certificat n’est pas configuré et le dry_run réussi.
+
+## D-028 — 11 octobre 2026 : certificat CA public intégré au dépôt
+
+Malik fournit le fichier prod-ca-2021.crt téléchargé du tableau de bord après SELF_SIGNED_CERT_IN_CHAIN. La CA publique est versionnée dans supabase/certificates et chargée par défaut via un chemin relatif au script, ce qui évite une manipulation de secret sur téléphone. SUPABASE_DB_CA_CERT reste un override optionnel. Empreinte et expiration vérifiées et testées ; même CA Node/CLI avec vérification TLS/hôte. Une signature CA valide ne prouve pas le succès d’une connexion réelle ; prochain contrôle dry_run requis. Aucun nouveau secret ou bypass TLS.

@@ -1,3 +1,12 @@
+## Checkpoint courant — CA Supabase intégrée — 11 octobre 2026
+
+- Reprise main local/distant `4108486ad76bd698be52ab01705ead4e8fd9ff00`, vérifié via ls-remote. Fichier e2e/onboarding-gift.spec.ts non suivi conservé, chantier suspendu, hors commit.
+- Malik transmet prod-ca-2021.crt téléchargé de Supabase. Certificat public ajouté à supabase/certificates/prod-ca-2021.crt ; sujet/émetteur Supabase Root 2021 CA, CA:TRUE, expiration 26 avril 2031. OpenSSL verify sur la CA et elle-même : OK ; cela valide sa signature, pas une connexion production ni une chaîne serveur actuelle.
+- SHA-256 certificat : 80:70:25:AD:50:D4:ED:21:9D:2C:9C:7D:29:9C:00:4F:82:4E:B0:0C:F7:F6:5A:FE:F6:07:D0:7B:72:E6:CA:FA.
+- Chargement automatique de la CA depuis le dépôt lorsque SUPABASE_DB_CA_CERT est absent/vide. Aucun nouveau secret à créer. Override PEM conservé si explicitement configuré ; Node et CLI utilisent la même CA, TLS vérifié maintenu. Pas de données/base/secret/réseau modifiés.
+- Tests `node scripts/supabase-deploy.test.mjs` **21/21**, code 0 ; ESLint ciblé, --check et diff-check code 0. Empreinte/date, fallback sans secret, override et refus PEM invalide couverts. Aucun build/UI/SQL de jeu relancé, aucun accès production réel ; test navigateur suspendu non publié.
+- Prochaine action après publication : nouveau Run workflow [Mise à jour Supabase](https://github.com/GoodFight37/CreatorDeck/actions/workflows/supabase-deploy.yml), main, dry_run cochée, approve_manual décochée, sans attendre CI complète. Ne pas Re-run l’ancien commit. Succès seulement si le log vérifie connexion TLS/projet/historique ; une éventuelle nouvelle erreur d’authentification devra être traitée d’après son code.
+
 ## Checkpoint courant — certificat TLS Supabase — 11 octobre 2026
 
 - Malik fournit le nouveau dry_run GitHub : SELF_SIGNED_CERT_IN_CHAIN. Cause désormais prouvée : chaîne TLS non reconnue par le runner ; ce run ne valide pas le mot de passe. Ne plus proposer de changer mot de passe/URL sans une autre erreur.

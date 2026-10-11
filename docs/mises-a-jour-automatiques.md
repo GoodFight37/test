@@ -121,11 +121,10 @@ Un message « Mot de passe PostgreSQL refusé (28P01) » établit un refus d’a
 
 ## Certificat Supabase (SELF_SIGNED_CERT_IN_CHAIN)
 
-Erreur confirmée dans le run fourni par Malik : le runner ne reconnaît pas la chaîne TLS du serveur. Le mot de passe n’est pas validé à ce stade ; ne pas le changer pour ce message.
+Erreur confirmée dans le run fourni par Malik : le runner ne reconnaissait pas la chaîne TLS du serveur. Le mot de passe n’était pas validé à ce stade.
 
-1. Ouvrir [Database Settings CreatorDeck](https://supabase.com/dashboard/project/yzxchpybqrfegvecihxf/database/settings).
-2. Dans **SSL Configuration**, sélectionner **Download Certificate**. Ne pas toucher au bouton Enforce SSL (son changement redémarre la base).
-3. Le certificat est public. On peut joindre le fichier .crt à l’agent pour préparer son intégration. Pour configurer directement le workflow : créer un secret Actions **SUPABASE_DB_CA_CERT** dont la valeur est le contenu PEM entier du fichier, de `-----BEGIN CERTIFICATE-----` à `-----END CERTIFICATE-----`, lignes comprises ; aucun mot de passe dans ce secret.
-4. Lancer un nouveau dry_run sur main après configuration. Aucun besoin d’attendre la CI complète. Réussite réelle seulement si « Connexion TLS, projet CreatorDeck et historique vérifiés » apparaît.
+Le fichier public prod-ca-2021.crt fourni par Malik depuis [Database Settings CreatorDeck](https://supabase.com/dashboard/project/yzxchpybqrfegvecihxf/database/settings) → SSL Configuration → Download Certificate est désormais versionné dans supabase/certificates. Chargement automatique : **aucun nouveau secret à créer**. Certificat Supabase Root 2021 CA, valide jusqu’au 26 avril 2031, empreinte SHA-256 80:70:25:AD:50:D4:ED:21:9D:2C:9C:7D:29:9C:00:4F:82:4E:B0:0C:F7:F6:5A:FE:F6:07:D0:7B:72:E6:CA:FA. Sa signature seule ne prouve pas l’accès serveur actuel.
 
-Le script valide la forme CA et conserve la vérification du certificat/hôte. Le CLI reçoit la même CA par un fichier temporaire 0600 supprimé après son exécution, aussi en cas d’erreur. Ni NODE_TLS_REJECT_UNAUTHORIZED=0 ni rejectUnauthorized=false. Preuve documentaire officielle : [SSL enforcement Supabase](https://supabase.com/docs/guides/platform/ssl-enforcement).
+Lancer un **nouveau Run workflow** sur main avec dry_run cochée et approve_manual décochée, sans attendre la CI complète. Réussite réelle seulement si « Connexion TLS, projet CreatorDeck et historique vérifiés » apparaît. Ne pas Re-run l’ancien commit.
+
+SUPABASE_DB_CA_CERT reste un override optionnel si une nouvelle autorité est fournie : contenu PEM entier, délimiteurs et lignes compris. Le script valide la forme CA et conserve la vérification du certificat/hôte. Le CLI reçoit la même CA par un fichier temporaire 0600 supprimé après son exécution, aussi en cas d’erreur. Ni NODE_TLS_REJECT_UNAUTHORIZED=0 ni rejectUnauthorized=false. Ne pas modifier Enforce SSL pour installer la CA (ce réglage redémarre la base). [Documentation officielle](https://supabase.com/docs/guides/platform/ssl-enforcement).
