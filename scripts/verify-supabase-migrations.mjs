@@ -235,6 +235,8 @@ try {
     if (name !== "0044_tutoriel_reset_cadeau.sql") await client.query(sql);
   }
 
+  const ordinaryPackHelperBeforeReset = (await client.query("select pg_get_functiondef('public._save_add_pack_cards(uuid,jsonb,integer,timestamptz,integer,timestamptz)'::regprocedure) as definition")).rows[0].definition;
+
   // Prépare trois comptes avec progression et données sociales avant le reset,
   // puis exécute la migration réelle au moment où un déploiement la rencontrerait.
   const RESET_A = "f4444444-4444-4444-8444-444444444444";
@@ -258,6 +260,8 @@ try {
   await seedResetSave(RESET_B);
   await seedResetSave(RESET_C);
   await client.query(tutorielReset);
+  check("cadeau : helper des boosters ordinaires inchangé", (await client.query("select pg_get_functiondef('public._save_add_pack_cards(uuid,jsonb,integer,timestamptz,integer,timestamptz)'::regprocedure) as definition")).rows[0].definition === ordinaryPackHelperBeforeReset);
+  check("cadeau : helper privé inaccessible aux clients", (await client.query("select has_function_privilege('anon','public._save_add_gift_cards(uuid,jsonb,integer,timestamptz,integer,timestamptz)','execute') a, has_function_privilege('authenticated','public._save_add_gift_cards(uuid,jsonb,integer,timestamptz,integer,timestamptz)','execute') b")).rows.every(r => !r.a && !r.b));
   const resetProof = await client.query(`
     select
       (select count(*)::int from public.return_gifts where user_id=any($1::uuid[]) and boosters_remaining=5) gifts,

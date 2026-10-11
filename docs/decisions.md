@@ -195,3 +195,18 @@ et cinq ouvertures, typecheck/lint/build webpack réussis. Le build Turbopack es
 bloqué par l'interdiction de bind un port dans le Cloud. Production et téléphone
 réel non vérifiés ; le reset réel est interdit sans projet cible, schéma et
 sauvegarde récupérable explicitement vérifiés.
+
+
+## D-021 — 11 octobre 2026 : accès et préparation du reset réel
+
+Malik autorise le reset réel après publication du code, avec vérification maintenue
+de la cible, du schéma et d'une sauvegarde récupérable. L'accès Cloud effectif
+refuse Supabase en CONNECT 403 et n'a aucun identifiant de gestion prêt. Le
+brouillon réseau/secret est sauvegardé mais non publié. La voie directe par le
+tableau de bord Supabase sur téléphone permet de commencer les vérifications
+sans déplacer de secrets ou contourner le proxy. Aucune écriture réelle exécutée.
+
+Le helper cadeau est isolé pour éviter de remplacer `_save_add_pack_cards`,
+utilisé par les boosters ordinaires. Les tests vérifient la conservation exacte
+de ce helper et l'absence de droits clients sur le nouveau helper cadeau.
+Validation locale : 1 109 tests projet et SQL jetable réussis.

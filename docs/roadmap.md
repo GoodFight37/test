@@ -1,12 +1,13 @@
 ## Chantier livré localement — tutoriel, reset global, cadeau — 10 octobre 2026
 
-Code commité localement sur `main` au SHA `f97ea42` (sans push). Migration additive `0044_tutoriel_reset_cadeau.sql`, tutoriel trois étapes et sauvegarde serveur, cadeau de 5 tirages distincts disponible après tutoriel, tirage serveur existant, CTA « Retour au Drop ».
+Code `f97ea42` et checkpoint `30490b4` poussés sur `main`. Migration additive `0044_tutoriel_reset_cadeau.sql`, tutoriel trois étapes et sauvegarde serveur, cadeau de 5 tirages distincts disponible après tutoriel, tirage serveur existant, CTA « Retour au Drop ».
 
 - [x] Reset global one-shot : identifiants, profils, amis et historiques conclus conservés ; trades en attente annulés, annonces actives retirées, progression/réserves remises au départ ; cadeau préprovisionné pour chaque compte existant.
 - [x] Tests API/UI/SQL : ordre tutoriel puis cadeau, message exact, claim unique, cinq ouvertures de cinq cartes et absence de débit réserve/paiements ; données préservées et migration rejouée sans écraser progression ultérieure.
 - [x] Validations locales : `npm test` 71 fichiers/1 109 tests ; `npm run ecrans` 13 fichiers/73 tests ; typecheck, lint, build webpack, et `npm run supabase:verify` tous verts. Le build Turbopack standard ne fonctionne pas dans le Cloud restreint (port local refusé) ; `npm run build -- --webpack` réussit. Aucun téléphone réel ni E2E navigateur pour ce lot.
-- [x] Commit local sur `main` (`f97ea42`) ; pas de push, PR fusionnée ou branche supprimée.
-- [ ] Production interdite pour cette étape. Une application réelle nécessitera d'abord projet cible certain, schéma courant connu et sauvegarde récupérable ; aucun de ces contrôles de production n'a été exécuté.
+- [x] Code et checkpoint poussés sur `main` ; aucune PR fusionnée ou branche supprimée.
+- [ ] Application réelle désormais autorisée par Malik, toujours sous condition de vérifier cible, schéma et sauvegarde récupérable. Accès Cloud bloqué CONNECT 403 ; alternative via tableau de bord Supabase et contrôle en lecture dans [le guide](supabase-reset-access.md). Aucun reset exécuté par cette session.
+- [x] Correctif K-018 avant application : helper cadeau séparé, helper ordinaire préservé. Suite projet 1 109 tests et SQL jetable réussis le 11 octobre.
 
 Résultats et limites exacts dans [la passation](agent-handoff.md), choix dans [les décisions](decisions.md), risque de procédure dans [les problèmes connus](known-issues.md).
 

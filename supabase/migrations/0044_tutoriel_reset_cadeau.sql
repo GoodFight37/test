@@ -137,19 +137,18 @@ begin
   insert into public.return_gift_draws(user_id,drawn_at,cards) values(v_user,v_now,v_cards);
   perform public.card_claim_add(v_user,v_cards,'cadeau');
   update public.return_gifts set boosters_remaining=boosters_remaining-1 where user_id=v_user returning * into v_gift;
-  -- Reprendre la version courante de _save_add_pack_cards conserve les
-  -- compteurs serveur (réserve/ouvertures) tout en ajoutant seulement les
-  -- cartes offertes. Le client adoptera la ligne, pas un calcul de booster payant.
-  v_save:=public._save_add_pack_cards(v_user,v_cards,coalesce((select packs from public.pack_state where user_id=v_user),2),coalesce((select last_regen_at from public.pack_state where user_id=v_user),v_now),coalesce((select openings from public.pack_state where user_id=v_user),0),v_now);
+  -- Ajouter les cartes avec un helper dédié au cadeau préserve tous les
+  -- compteurs ordinaires. Le helper des boosters normaux reste inchangé.
+  v_save:=public._save_add_gift_cards(v_user,v_cards,coalesce((select packs from public.pack_state where user_id=v_user),2),coalesce((select last_regen_at from public.pack_state where user_id=v_user),v_now),coalesce((select openings from public.pack_state where user_id=v_user),0),v_now);
   return jsonb_build_object('cards',v_cards,'gift_remaining',v_gift.boosters_remaining,'save',to_jsonb(v_save));
 end $$;
 
 revoke all on function public.open_return_gift_pack() from public,anon;
 grant execute on function public.open_return_gift_pack() to authenticated;
 
--- Le moteur serveur de tirage ajoute ses cartes à saves puis actualise les
--- compteurs publics : un lot cadeau ne doit pas incrémenter l'ouverture.
-create or replace function public._save_add_pack_cards(
+-- Helper réservé au cadeau : ajouter les cartes sans changer les compteurs
+-- de réserve/ouvertures, ni remplacer le helper des boosters ordinaires.
+create or replace function public._save_add_gift_cards(
   p_user uuid, p_cards jsonb, p_packs integer, p_last_regen timestamptz,
   p_openings integer, p_now timestamptz
 )
@@ -166,6 +165,8 @@ begin
   update public.saves set state=v_state,state_checksum=md5(v_state::text),device_updated_at=v_ms,updated_at=p_now where user_id=p_user returning * into v_save;
   return v_save;
 end $$;
+
+revoke all on function public._save_add_gift_cards(uuid,jsonb,integer,timestamptz,integer,timestamptz) from public,anon,authenticated;
 
 -- Une seule transaction applique la remise a zero et preprovisionne un cadeau
 -- par compte existant. Le marqueur est pose dans la meme transaction.
