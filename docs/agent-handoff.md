@@ -1,3 +1,11 @@
+## Checkpoint courant — certificat TLS Supabase — 11 octobre 2026
+
+- Malik fournit le nouveau dry_run GitHub : SELF_SIGNED_CERT_IN_CHAIN. Cause désormais prouvée : chaîne TLS non reconnue par le runner ; ce run ne valide pas le mot de passe. Ne plus proposer de changer mot de passe/URL sans une autre erreur.
+- Reprise main local/distant `db0c2484cb8e02e65aef33b887fc6f42aef9cd4f`, vérifié via ls-remote. Test cadeau non suivi conservé et suspendu, hors commit.
+- Support `SUPABASE_DB_CA_CERT` (contenu PEM) ajouté au workflow/script : certificat CA vérifié avec X509Certificate, transmis à pg avec rejectUnauthorized=true puis au CLI via sslrootcert temporaire privé supprimé même sur erreur. sslmode=verify-full conservé. Aucun certificat reçu ni TLS production validé.
+- Documentation officielle Supabase consultée dans GitHub raw : guides database/connecting-to-postgres et platform/ssl-enforcement, section SSL Configuration de /dashboard/project/_/database/settings, Download Certificate. Ne pas changer Enforce SSL (réinitialise la base). Prochaine action : télécharger le certificat officiel du projet, joindre le fichier public à cette session pour installation ou enregistrer son PEM entier dans le secret GitHub SUPABASE_DB_CA_CERT ; nouveau dry_run après configuration.
+- Tests `node scripts/supabase-deploy.test.mjs` : **20/20**, code 0 ; ESLint ciblé et --check/diff-check code 0. Test CA système de fixture, mode fichier 0600, même CA Node/CLI, nettoyage réussite/échec, maintien TLS vérifié. Pas d’essai connexion réelle ; aucune migration, donnée, politique réseau ou secret modifié par l’agent. Pas de build/UI/SQL de jeu, produit inchangé.
+
 ## Checkpoint courant — diagnostic connexion Supabase — 11 octobre 2026
 
 - Reprise main local/distant `713aea4df6b888a3c2730569698da0ff97cca24d`, vérifié via git ls-remote. Fichier préexistant non suivi `e2e/onboarding-gift.spec.ts` conservé, inachevé, hors commit ; chantier explicitement suspendu par Malik. Aucun autre fichier préexistant modifié.

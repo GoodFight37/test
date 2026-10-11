@@ -1,10 +1,32 @@
 /** Déploiement via le CLI officiel, uniquement après contrôle du plan. */
-import { readFile, readdir, appendFile } from "node:fs/promises";
-import { createHash } from "node:crypto";
+import { readFile, readdir, appendFile, mkdtemp, writeFile, rm } from "node:fs/promises";
+import { createHash, X509Certificate } from "node:crypto";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { spawnSync } from "node:child_process";
 
 export const PROJECT = "yzxchpybqrfegvecihxf";
+export function postgresTls(certificate) {
+  if (!certificate?.trim()) return { rejectUnauthorized: true };
+  try {
+    if (!new X509Certificate(certificate).ca) throw new Error('not-ca');
+  } catch { throw new Error('SUPABASE_DB_CA_CERT doit contenir le certificat CA PEM téléchargé depuis Supabase, en entier.'); }
+  return { rejectUnauthorized: true, ca: certificate };
+}
+
+/** Le CLI reçoit la même autorité que le contrôle Node, sans relâcher TLS. */
+export async function withCertificateUrl(url, certificate, action) {
+  if (!certificate) return action(url);
+  const directory = await mkdtemp(join(tmpdir(), 'creatordeck-db-ca-'));
+  try {
+    const path = join(directory, 'root.crt');
+    await writeFile(path, certificate, { mode: 0o600 });
+    const secured = new URL(url);
+    secured.searchParams.set('sslrootcert', path);
+    return await action(secured);
+  } finally { await rm(directory, { recursive: true, force: true }); }
+}
 /** Messages fixes : ne jamais journaliser les paramètres du pilote PostgreSQL. */
 export function connectionFailure(error) {
   const reasons = {
@@ -94,11 +116,12 @@ async function main() {
   }
   if (!process.env.SUPABASE_DB_URL) throw new Error('Configurer le secret GitHub SUPABASE_DB_URL pour activer les migrations.');
   const url = checkTarget(process.env.SUPABASE_DB_URL);
+  const ssl = postgresTls(process.env.SUPABASE_DB_CA_CERT);
   const { default: pg } = await import('pg');
   const client = new pg.Client({
     host: url.hostname, port: Number(url.port || 5432), database: 'postgres',
     user: decodeURIComponent(url.username), password: decodeURIComponent(url.password),
-    ssl: { rejectUnauthorized: true }, connectionTimeoutMillis: 15000,
+    ssl, connectionTimeoutMillis: 15000,
     statement_timeout: 30000,
   });
   let pending;
@@ -116,11 +139,13 @@ async function main() {
   if (!pending.length) { console.log('La base est déjà à jour. Aucun SQL de migration exécuté.'); return; }
   console.log(`Migrations validées : ${pending.map(f => f.name).join(', ')}`);
   if (process.argv.includes('--dry-run')) { console.log('Lecture seule : aucun SQL exécuté.'); return; }
-  const run = spawnSync('supabase', ['db', 'push', '--db-url', url.toString(), '--yes'], { encoding: 'utf8', timeout: 300000 });
-  const redact = text => String(text || '').split(url.toString()).join('[connexion masquée]').split(process.env.SUPABASE_DB_URL).join('[connexion masquée]').split(decodeURIComponent(url.password)).join('[mot de passe masqué]');
-  process.stdout.write(redact(run.stdout));
-  process.stderr.write(redact(run.stderr));
-  if (run.error || run.status !== 0) throw new Error('CLI Supabase en échec. Consulter la sortie masquée ; aucune réparation automatique.');
+  await withCertificateUrl(url, ssl.ca, async (secured) => {
+    const run = spawnSync('supabase', ['db', 'push', '--db-url', secured.toString(), '--yes'], { encoding: 'utf8', timeout: 300000 });
+    const redact = text => String(text || '').split(secured.toString()).join('[connexion masquée]').split(url.toString()).join('[connexion masquée]').split(process.env.SUPABASE_DB_URL).join('[connexion masquée]').split(decodeURIComponent(url.password)).join('[mot de passe masqué]');
+    process.stdout.write(redact(run.stdout));
+    process.stderr.write(redact(run.stderr));
+    if (run.error || run.status !== 0) throw new Error('CLI Supabase en échec. Consulter la sortie masquée ; aucune réparation automatique.');
+  });
   if (process.env.GITHUB_STEP_SUMMARY) await appendFile(process.env.GITHUB_STEP_SUMMARY, `Migrations appliquées sur CreatorDeck : ${pending.map(f => f.name).join(', ')}\n`);
 }
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {

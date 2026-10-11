@@ -1,3 +1,7 @@
+## 11 octobre 2026 — Support du certificat TLS Supabase
+
+Retour GitHub : SELF_SIGNED_CERT_IN_CHAIN. Support CA explicite Node et CLI ajouté, TLS/hôte vérifiés, fichier temporaire privé nettoyé. 20/20 tests locaux, pas de connexion réelle ni de modification de la base. Certificat officiel du projet encore à configurer ; ne pas changer le mot de passe pour cet échec.
+
 ## 11 octobre 2026 — Diagnostic de connexion Supabase
 
 Messages de connexion PostgreSQL classés sans secrets ; dry_run manuel en lecture seule sans attente de CI et sans installation du CLI. CI complète toujours obligatoire pour les migrations. Aucun SQL production appliqué ; cause réelle du précédent échec encore inconnue. Voir la passation pour validations et publication. Test navigateur cadeau commencé auparavant conservé hors livraison, suspendu à la demande de Malik.

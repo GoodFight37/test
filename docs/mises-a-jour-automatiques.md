@@ -118,3 +118,14 @@ constatée pendant cette préparation.
 Le contrôle manuel dry_run sur main courant ne nécessite pas la CI verte et n’installe pas le CLI Supabase. Il ne modifie ni données ni historique. Créer un **nouveau** Run workflow pour utiliser le correctif ; Re-run d’un ancien run utilise sa révision ancienne.
 
 Un message « Mot de passe PostgreSQL refusé (28P01) » établit un refus d’authentification ; ENOTFOUND concerne l’adresse/DNS, ENETUNREACH le réseau, et SELF_SIGNED_CERT_IN_CHAIN la confiance TLS. Un refus « projet ou utilisateur introuvable » vient du pooler. Ces messages fixes ne contiennent aucune URL ni mot de passe. Ne pas changer le secret au hasard et ne jamais désactiver la vérification TLS. Le log générique ancien ne prouve aucune de ces causes.
+
+## Certificat Supabase (SELF_SIGNED_CERT_IN_CHAIN)
+
+Erreur confirmée dans le run fourni par Malik : le runner ne reconnaît pas la chaîne TLS du serveur. Le mot de passe n’est pas validé à ce stade ; ne pas le changer pour ce message.
+
+1. Ouvrir [Database Settings CreatorDeck](https://supabase.com/dashboard/project/yzxchpybqrfegvecihxf/database/settings).
+2. Dans **SSL Configuration**, sélectionner **Download Certificate**. Ne pas toucher au bouton Enforce SSL (son changement redémarre la base).
+3. Le certificat est public. On peut joindre le fichier .crt à l’agent pour préparer son intégration. Pour configurer directement le workflow : créer un secret Actions **SUPABASE_DB_CA_CERT** dont la valeur est le contenu PEM entier du fichier, de `-----BEGIN CERTIFICATE-----` à `-----END CERTIFICATE-----`, lignes comprises ; aucun mot de passe dans ce secret.
+4. Lancer un nouveau dry_run sur main après configuration. Aucun besoin d’attendre la CI complète. Réussite réelle seulement si « Connexion TLS, projet CreatorDeck et historique vérifiés » apparaît.
+
+Le script valide la forme CA et conserve la vérification du certificat/hôte. Le CLI reçoit la même CA par un fichier temporaire 0600 supprimé après son exécution, aussi en cas d’erreur. Ni NODE_TLS_REJECT_UNAUTHORIZED=0 ni rejectUnauthorized=false. Preuve documentaire officielle : [SSL enforcement Supabase](https://supabase.com/docs/guides/platform/ssl-enforcement).

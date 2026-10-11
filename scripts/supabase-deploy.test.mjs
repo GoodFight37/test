@@ -1,11 +1,40 @@
 import { test } from 'node:test';
 import { spawnSync } from 'node:child_process';
 import assert from 'node:assert/strict';
-import { readFile } from 'node:fs/promises';
-import { checkTarget, migrationPlan, PROJECT, connectionFailure } from './supabase-deploy.mjs';
+import { readFile, stat } from 'node:fs/promises';
+import { rootCertificates } from 'node:tls';
+import { checkTarget, migrationPlan, PROJECT, connectionFailure, postgresTls, withCertificateUrl } from './supabase-deploy.mjs';
 const old = { name: '0046_reset.sql', version: '0046', hash: 'known', sql: 'select 1;' };
 const next = { name: '0047_fix.sql', version: '0047', hash: 'new', sql: '-- creatordeck-deploy: automatic\nselect 1;' };
 const baseline = { [old.name]: old.hash };
+test('CA explicite, défaut système et certificat invalide : TLS reste vérifié', () => {
+  assert.deepEqual(postgresTls(undefined), { rejectUnauthorized: true });
+  assert.deepEqual(postgresTls(''), { rejectUnauthorized: true });
+  assert.deepEqual(postgresTls(rootCertificates[0]), { rejectUnauthorized: true, ca: rootCertificates[0] });
+  assert.throws(() => postgresTls('fake-password-not-a-certificate'), /certificat CA PEM/);
+});
+test('CLI utilise la même CA, verify-full et un fichier privé temporaire', async () => {
+  const url = checkTarget(`postgresql://postgres:fake@db.${PROJECT}.supabase.co:5432/postgres`);
+  let path;
+  await withCertificateUrl(url, rootCertificates[0], async secured => {
+    assert.equal(secured.searchParams.get('sslmode'), 'verify-full');
+    path = secured.searchParams.get('sslrootcert');
+    assert.equal(await readFile(path, 'utf8'), rootCertificates[0]);
+    assert.equal((await stat(path)).mode & 0o777, 0o600);
+  });
+  assert.equal(url.searchParams.has('sslrootcert'), false);
+  await assert.rejects(stat(path), { code: 'ENOENT' });
+});
+test('CA temporaire supprimée aussi après échec du CLI ; défaut sans fichier', async () => {
+  const url = new URL('postgresql://example/postgres?sslmode=verify-full');
+  await withCertificateUrl(url, undefined, async secured => assert.equal(secured, url));
+  let path;
+  await assert.rejects(withCertificateUrl(url, rootCertificates[0], async secured => {
+    path = secured.searchParams.get('sslrootcert');
+    throw new Error('fake-cli-failure');
+  }), /fake-cli-failure/);
+  await assert.rejects(stat(path), { code: 'ENOENT' });
+});
 test('diagnostic distingue mot de passe, DNS, réseau, TLS et pooler sans secret', () => {
   const secret = 'fake-password+?';
   for (const [error, expected] of [
@@ -68,6 +97,7 @@ test('le workflow attend une CI complète, main et utilise la révision vérifi�
   assert.match(yaml, /sha !== current.data.commit.sha/);
   assert.match(yaml, /ref: \$\{\{ steps.revision.outputs.sha \}\}/);
   assert.match(yaml, /cancel-in-progress: false/);
+  assert.match(yaml, /SUPABASE_DB_CA_CERT: \$\{\{ secrets\.SUPABASE_DB_CA_CERT \}\}/);
   assert.match(yaml, /readOnly = context.eventName === 'workflow_dispatch' && context.payload.inputs\?\.dry_run === 'true'/);
   assert.match(yaml, /if \(!trusted && !readOnly\) throw/);
   assert.match(yaml, /uses: supabase\/setup-cli@v1\s+if:.*!\(github.event_name == 'workflow_dispatch' && inputs.dry_run\)/);

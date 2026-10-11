@@ -1,3 +1,7 @@
+## Connexion TLS Supabase — 11 octobre 2026
+
+Dry_run fourni : SELF_SIGNED_CERT_IN_CHAIN. Support certificat CA officiel préparé/testé (20 tests) ; configuration du certificat puis connexion réelle encore requises. Ne pas modifier le mot de passe pour cette erreur. TLS reste vérifié, aucun changement produit/base. [Procédure](mises-a-jour-automatiques.md).
+
 ## Diagnostic connexion Supabase — 11 octobre 2026
 
 Erreur réelle encore inconnue : ancien script masquait tous les codes PostgreSQL. Diagnostic sûr par cause ajouté ; contrôle manuel dry_run indépendant de la CI complète, aucune migration dans ce mode. Application réelle toujours bloquée sans CI verte. Connexion réelle reste à vérifier avec le nouveau workflow ; aucune nouvelle configuration de mot de passe demandée. Test navigateur cadeau suspendu, inachevé et non publié.

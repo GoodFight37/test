@@ -78,6 +78,7 @@ jobs:
         if: steps.revision.outputs.ready == 'true'
         env:
           SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+          SUPABASE_DB_CA_CERT: ${{ secrets.SUPABASE_DB_CA_CERT }}
           DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run }}
           APPROVE_MANUAL: ${{ github.event_name == 'workflow_dispatch' && inputs.approve_manual }}
         run: |

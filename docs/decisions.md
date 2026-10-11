@@ -235,3 +235,7 @@ dans la passation ; la correction de schéma n'est pas encore appliquée.
 Le log fourni après changement du mot de passe reste générique, car le script efface tous les codes du pilote. Classer les erreurs de connexion par messages fixes (authentification, DNS, TCP, TLS, pooler, timeout), jamais par impression de message/detail brut. Tests de non-divulgation et erreurs agrégées. La cause production ne peut pas être déduite rétroactivement du message masqué.
 
 Le dry_run manuel sur main courant fait uniquement les lectures existantes et peut donc précéder la CI complète ; le CLI de migration n’est pas installé dans ce mode. Déploiement automatique et validation manual restent conditionnés à une CI verte et à la bonne révision. Choix motivé par les attentes inutiles du propriétaire ; pas de désactivation TLS, de migration, de changement de secret ni de politique réseau.
+
+## D-027 — 11 octobre 2026 : autorité TLS Supabase explicite
+
+Le nouveau log GitHub établit SELF_SIGNED_CERT_IN_CHAIN avant authentification. Accepter le certificat CA PEM officiel via SUPABASE_DB_CA_CERT, conservant rejectUnauthorized=true et verify-full. Le même certificat sert au contrôle pg et au CLI (sslrootcert privé temporaire, supprimé dans finally). Sans CA fournie, la confiance système actuelle reste utilisée ; aucun bypass TLS. La documentation officielle indique Database Settings → SSL Configuration → Download Certificate. Connexion réelle non validée tant que le certificat n’est pas configuré et le dry_run réussi.
